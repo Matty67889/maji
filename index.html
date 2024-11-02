@@ -13,5 +13,13 @@
 
 <body>
   <h1>Hello World</h1>
-  <script></script>
+  <script>
+    d3.csv('data/FEMA_Aid_Distribution_Data_clean.csv').then(data => {
+      console.log(data);
+    });
+
+    d3.csv('data/us_disaster_declarations_clean.csv').then(data => {
+      console.log(data);
+    });
+  </script>
 </body>
