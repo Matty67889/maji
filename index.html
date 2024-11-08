@@ -5,21 +5,106 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>INFO 3300 Project 2</title>
+
+  <link href="https://fonts.googleapis.com/css?family=Lato:400,700|Raleway:400,700" rel="stylesheet">
+  <link rel="stylesheet" type="text/css" href="../css/normalize.css">
+  <link rel="stylesheet" type="text/css" href="../css/skeleton.css">
+  <link rel="stylesheet" type="text/css" href="../css/custom-style.css">
+  <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.2.0/styles/default.min.css">
+  <link rel="stylesheet" href="../css/hljs-base16.css">
+  <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.2.0/highlight.min.js"></script>
+  
   <!-- Import D3 -->
   <script src="https://d3js.org/d3.v7.min.js"></script>
   <!-- Import Topojson -->
   <script src="https://d3js.org/topojson.v3.min.js"></script>
+
+   <style>
+   .state {
+        fill: lightgrey;
+      }
+      .outline {
+        fill: none;
+        stroke: black;
+        stroke-width: 1px;
+      }
+      .graticule {
+          fill: none;
+          stroke: grey;
+          stroke-width: 1px;
+      }
+      .tooltip {
+          pointer-events: none;
+      }
+
+
+    </style>
 </head>
 
 <body>
-  <h1>Hello World</h1>
-  <script>
-    d3.csv('data/FEMA_Aid_Distribution_Data_clean.csv').then(data => {
-      console.log(data);
-    });
+  
+  <h1>Project 2</h1>
+  <h3>Map</h3>
+  <svg id="choropleth" height="600" width="900" style="background: #445; margin-top:50px" ></svg>
 
-    d3.csv('data/us_disaster_declarations_clean.csv').then(data => {
-      console.log(data);
-    });
-  </script>
+  <svg id="colorLegend" height="100" width="600" style="background: #fff; margin-top:30px" >
+  
+  </svg>
+    <script>
+
+      // d3.csv('data/us_disaster_declarations_clean.csv').then(data => {
+    //   console.log(data);
+    const svg = d3.select("#choropleth");
+    const width = svg.attr("width");
+    const height = svg.attr("height");
+    const margin = { top: 20, right: 20, bottom: 20, left:20};
+    const mapWidth = width - margin.left - margin.right;
+    const mapHeight = height - margin.top - margin.bottom;
+    const map = svg.append("g")
+                    .attr("transform","translate("+margin.left+","+margin.top+")");
+                    
+
+        //aysnc func to load data and build map
+        const requestData = async function() {
+
+          
+          //draw map of US using topoJSON
+          
+    const us = await d3.json("data/us-smaller.json");
+    console.log(us);
+
+
+      var states = topojson.feature(us, us.objects.states);     // List of state outlines to fill
+      var statesMesh = topojson.mesh(us, us.objects.states);    // 'Mesh' of all outlines put together for a stroke
+      var projection = d3.geoAlbersUsa().fitSize([mapWidth, mapHeight], states);
+      var path = d3.geoPath().projection(projection);
+      console.log(states);
+      console.log(statesMesh);
+      
+      let graticule = d3.geoGraticule10();
+      console.log(graticule);
+      map.append("path").attr("class","graticule").attr("d", path(graticule));
+      
+    // Draw states
+    let statePaths = map.selectAll("path.state").data(states.features)
+        .join("path")
+        .attr("class", "state")
+        .attr("note", d => d.id)  
+        .attr("d", path)
+        .on('mouseover', mouseEntersState)
+        .on('mouseout', mouseLeavesState);
+
+    map.append("path").datum(statesMesh)
+        .attr("class", "outline")
+        .attr("d", path);
+
+        const fema = await d3.csv("data/FEMA_Aid_Distribution_Data_clean.csv");
+        console.log(fema);
+      
+    var stateDict = {};   // stateID ===> stateData
+
+        }
+        requestData();
+  
+ </script>
 </body>
