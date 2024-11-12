@@ -51,6 +51,7 @@
     //aysnc func to load data and build map
     const requestData = async function () {
       //draw map
+      // source: professor Rz
       const us = await d3.json("data/us-smaller.json");
       console.log(us);
 
@@ -79,7 +80,94 @@
       const fema = await d3.csv("data/FEMA_Aid_Distribution_Data_clean.csv");
       console.log(fema);
 
-      var stateDict = {};   // stateID ===> stateData
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      const disasterData = await d3.csv("data/us_disaster_declarations_clean.csv", d3.autoType);
+      console.log("disaster data:\n", disasterData);
+
+      // data cleaning
+
+      let stateAbbrevs = ["AL", "AK", "AZ", "AR", "CA", "CO", "CT",
+        "DE", "FL", "GA", "HI", "ID", "IL", "IN", "IA", "KS",
+        "KY", "LA", "ME", "MD", "MA", "MI", "MN", "MS", "MO",
+        "MT", "NE", "NV", "NH", "NJ", "NM", "NY", "NC", "ND",
+        "OH", "OK", "OR", "PA", "RI", "SC", "SD", "TN", "TX",
+        "UT", "VT", "VA", "WA", "WV", "WI", "WY"];
+      // filter out data that is not states
+      let filteredFema = fema.filter(d => stateAbbrevs.includes(d['State']));
+      console.log(filteredFema);
+
+      // data aggregation
+
+      // get states from filtered data again to avoid
+      // reference errors (fema dataset may not contain all states)
+      let uniqStates = [];
+      filteredFema.forEach(d => {
+        // cast money values to ints (they have dollar signs in front of them)
+        d['Announced/Allocated'] = Number(d['Announced/Allocated'].replace(/\$/g, ''));
+        if (!uniqStates.includes(d['State'])) {
+          uniqStates.push(d['State']);
+        }
+      });
+      console.log("states", uniqStates);
+
+      // create dictionary mapping each state to an object
+      // that contains the amount allocated, amount of disasters,
+      // unique disasters
+      let stateDict = {}
+      filteredFema.forEach(d => {
+        let currState = d['State'];
+        let amntAllocated = d['Announced/Allocated'];
+
+        if (currState in stateDict) {
+          stateDict[currState]['amntAllocated'] += amntAllocated;
+        } else {
+          stateDict[currState] = {
+            'amntAllocated': amntAllocated,
+            'numDisasters': 0,
+            'uniqueDisasters': []
+          };
+        }
+      });
+
+      disasterData.forEach(d => {
+        let currState = d['state'];
+        let disasterName = d['incident_type'];
+
+        if (currState in stateDict) {
+          stateDict[currState]['numDisasters'] += 1;
+          if (!stateDict[currState]['uniqueDisasters'].includes(disasterName)) {
+            stateDict[currState]['uniqueDisasters'].push(disasterName);
+          }
+        }
+      });
+
+      console.log(stateDict);
+
+
+
+
+
+
+
+
+
+
+
+      // var stateDict = {};   // stateID ===> stateData
     }
     requestData();
   </script>
