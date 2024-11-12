@@ -171,37 +171,51 @@
       // create dictionary mapping each state to an object
       // that contains the amount allocated, amount of disasters,
       // unique disasters
-      let stateDict = {}
+      let stateObjs = []
+
+      for (const [key, value] of Object.entries(stateToAbbrevDict)) {
+        stateObjs.push({
+          'state': key,
+          'stateAbbrev': value,
+          'amntAllocated': 0,
+          'numDisasters': 0,
+          'uniqueDisasters': []
+        });
+      }
+
       filteredFema.forEach(d => {
         let currState = d['State'];
         let amntAllocated = d['Announced/Allocated'];
 
-        if (currState in stateDict) {
-          stateDict[currState]['amntAllocated'] += amntAllocated;
-        } else {
-          stateDict[currState] = {
-            'amntAllocated': amntAllocated,
-            'numDisasters': 0,
-            'uniqueDisasters': []
-          };
-        }
+        stateObjs.forEach(obj => {
+          if (obj['stateAbbrev'] === currState) {
+            obj['amntAllocated'] += amntAllocated;
+            obj['numDisasters'] += 1;
+          }
+        });
       });
 
       disasterData.forEach(d => {
         let currState = d['state'];
         let disasterName = d['incident_type'];
 
-        if (currState in stateDict) {
-          stateDict[currState]['numDisasters'] += 1;
-          if (!stateDict[currState]['uniqueDisasters'].includes(disasterName)) {
-            stateDict[currState]['uniqueDisasters'].push(disasterName);
+        stateObjs.forEach(obj => {
+          if (obj['stateAbbrev'] === currState) {
+            if (!obj['uniqueDisasters'].includes(disasterName)) {
+              obj['uniqueDisasters'].push(disasterName);
+            }
           }
-        }
+        });
       });
 
-      console.log(stateDict);
+      console.log(stateObjs);
 
+      // create color scales
+      let stateColorScale = d3.scaleOrdinal()
+        .domain(d3.extent(stateObjs, d => d['numDisasters']))
+        .range(d3.schemeObservable10);
 
+      // map.selectAll(".state").attr("fill", d => d.id === 4 ? "blue" : "gray");
 
 
 
