@@ -13,7 +13,7 @@
 
   <style>
     .state {
-      fill: lightgrey;
+      /* fill: lightgrey; */
     }
 
     .outline {
@@ -52,7 +52,7 @@
     const requestData = async function () {
       //draw map
       // source: professor Rz
-      const us = await d3.json("data/us-smaller.json");
+      const us = await d3.json("data/states-10m.json");
       console.log(us);
 
       let states = topojson.feature(us, us.objects.states);
@@ -166,7 +166,7 @@
         d['Announced/Allocated'] = Number(d['Announced/Allocated'].replace(/\$/g, ''));
       });
 
-      // data aggregation
+      // data aggregation using array of objects
 
       // create dictionary mapping each state to an object
       // that contains the amount allocated, amount of disasters,
@@ -211,11 +211,13 @@
       console.log(stateObjs);
 
       // create color scales
+      console.log(d3.extent(stateObjs, d => d['numDisasters']));
       let stateColorScale = d3.scaleOrdinal()
         .domain(d3.extent(stateObjs, d => d['numDisasters']))
         .range(d3.schemeObservable10);
 
-      // map.selectAll(".state").attr("fill", d => d.id === 4 ? "blue" : "gray");
+      map.selectAll(".state").filter(d => d['properties']['name'] in stateToAbbrevDict)
+        .style("fill", d => stateColorScale(stateToAbbrevDict[d['properties']['name']]));
 
 
 
