@@ -223,12 +223,100 @@
 
 
 
-
+      return(stateObjs);
 
 
 
       // var stateDict = {};   // stateID ===> stateData
     }
     requestData();
+  </script>
+
+
+  <h3>Bar Chart</h3>
+  <svg id = "bar-chart" height = "600" width = "600"></svg>
+  <script>
+
+    const barChart = d3.select("svg#bar-chart");
+
+    const svgWidth = barChart.attr("width");
+    const svgHeight = barChart.attr("height");
+
+    const margins = {top:20, right: 20, bottom: 80, left: 80}; 
+
+    const barChartWidth = svgWidth - margins.left - margins.right;
+    const barChartHeight = svgHeight - margins.top - margins.bottom; 
+
+
+
+    d3.csv('data/FEMA_Aid_Distribution_Data_clean.csv').then( (fundingData) => {
+
+      const fundingScale = d3.scaleLinear()
+                .domain([0, 8000000000])
+                .range([barChartHeight, 10]);
+      const stateScale = d3.scaleLinear()
+                .domain([0,50])
+                .range([barChartWidth-margins.left, margins.top]);
+
+      // const StateExtent = d3.extent(fundingData, d => d['stateNum'])
+      // console.log("hi")
+      // console.log(StateExtent)
+      // const fundingExtent = d3.extent(fundingData, d => d['funding'])
+
+      //x axis
+      const xAxis = d3.axisBottom(stateScale); //create xAxis
+      
+      barChart.append("g")
+          .attr("class", "x axis")
+          .attr("transform", `translate(${margins.left}, ${margins.bottom + barChartHeight})`) //move axis to correct position
+          .call(xAxis);
+
+      //y axis
+      const yAxis = d3.axisLeft(fundingScale); //create yAxis
+      
+      barChart.append("g")
+          .attr("class", "y axis")
+          .attr("transform", `translate(${margins.left}, ${margins.bottom})`) //move axis to correct position
+          .call(yAxis);
+
+
+      //chart area
+
+      const barChartArea = barChart.append("g")
+                            .attr("transform", `translate(${margins.left}, ${margins.top})`)
+
+      let stateNumericalDict = {"AL" : 1, "AK": 2, "AZ": 3, "AR": 4, "CA": 5, "CO": 6, "CT": 7,
+      "DE": 8, "FL": 9, "GA": 10, "HI": 11, "ID": 12, "IL": 13, "IN": 14, "IA": 15, "KS": 16,
+      "KY": 17, "LA": 18, "ME": 19, "MD": 20, "MA": 21, "MI": 22, "MN": 23, "MS": 24, "MO": 25,
+      "MT":26, "NE":27, "NV":28, "NH":29, "NJ":30, "NM":31, "NY":32, "NC":33, "ND":34,
+      "OH":35, "OK":36, "OR":37, "PA":38, "RI":39, "SC":40, "SD":41, "TN":42, "TX":43,
+      "UT":44, "VT":45, "VA":46, "WA":47, "WV":48, "WI":49, "WY":50};
+
+      // console.log(fundingData)
+
+      fundingData.forEach( d => {
+        d['funding'] = Number(d['Obligated'].replace("$",''));
+        d['stateNum'] = Number(d['State'].replace(d['State'],stateNumericalDict[d['State']]))
+      });
+
+      // console.log(fundingData)
+      
+      
+      //bars
+      fundingData.forEach ((d,i) => {
+        // console.log(i)
+        barChartArea.append('line')
+                .attr("x1", stateScale(d["stateNum"]))
+                .attr("x2", stateScale(d["stateNum"]))
+                .attr("y1", svgHeight - 10) 
+                .attr("y2", fundingScale(d["funding"]))
+                .style("stroke", "darkblue")
+                .style("stroke-width", 10);
+      });        
+    });
+    
+
+
+      
   </script>
 </body>
