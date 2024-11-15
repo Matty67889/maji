@@ -276,9 +276,9 @@
         let stateName = stateProperties['name'];
         stateObjs.forEach(element => {
           if (element['state'] === stateName) {
-            txt.text(element[stateName]);
+            txt.text(element['state']);
             txt2.text(`Number of Total Disasters: ${element['numDisasters']}`);
-            txt3.text(`Total $ Allocated for Assistance: ${element['amntAllocated']}`);
+            txt3.text(`Total $ Allocated for Assistance: $${Math.round(element['amntAllocated'])}`);
           }
         });
 
