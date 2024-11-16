@@ -35,9 +35,6 @@
   <h3>Map</h3>
   <svg id="disaster-svg" height="600" width="900" style="background: #445; margin-top:50px"></svg>
   <script>
-
-    // d3.csv('data/us_disaster_declarations_clean.csv').then(data => {
-    //   console.log(data);
     const svg = d3.select("#disaster-svg");
     const width = svg.attr("width");
     const height = svg.attr("height");
@@ -59,8 +56,6 @@
       let statesMesh = topojson.mesh(us, us.objects.states);
       let projection = d3.geoAlbersUsa().fitSize([mapWidth, mapHeight], states);
       let path = d3.geoPath().projection(projection);
-      console.log(states);
-      console.log(statesMesh);
 
       let graticule = d3.geoGraticule10();
       console.log(graticule);
@@ -83,7 +78,7 @@
       const disasterData = await d3.csv("data/us_disaster_declarations_clean.csv", d3.autoType);
       console.log("disaster data:\n", disasterData);
 
-      // data cleaning
+      /*** Data cleaning ***/
 
       let stateAbbrevs = ["AL", "AK", "AZ", "AR", "CA", "CO", "CT",
         "DE", "FL", "GA", "HI", "ID", "IL", "IN", "IA", "KS",
@@ -151,11 +146,9 @@
         d['Announced/Allocated'] = Number(d['Announced/Allocated'].replace(/\$/g, ''));
       });
 
-      // data aggregation using array of objects
+      /*** Data aggregation ***/
 
-      // create dictionary mapping each state to an object
-      // that contains the amount allocated, amount of disasters,
-      // unique disasters
+      // create list of objects that contain info on each state
       let stateObjs = []
 
       for (const [key, value] of Object.entries(stateToAbbrevDict)) {
@@ -193,10 +186,9 @@
         });
       });
 
-      console.log(stateObjs);
+      // console.log(stateObjs);
 
       // create color scales
-      console.log(d3.extent(stateObjs, d => d['numDisasters']));
       let stateColorScale = d3.scaleOrdinal()
         .domain(d3.extent(stateObjs, d => d['numDisasters']))
         .range(d3.schemeObservable10);
@@ -204,21 +196,17 @@
       map.selectAll(".state").filter(d => d['properties']['name'] in stateToAbbrevDict)
         .style("fill", d => stateColorScale(stateToAbbrevDict[d['properties']['name']]));
 
+      /*** Tooltips ***/
 
-
-
-      //tooltips
-      //source prof Rz
+      // source prof Rz 10.09 tooltip stub
       let tooltipWidth = 400;
       let tooltipHeight = 80;
-
 
       let momesh = map.append("path")
         .attr("class", "mouseover outline")
         .style("stroke", "white")
         .style("stroke-width", 3)
         .attr("d", "");
-
 
       let tooltip = map.append("g")
         .attr("class", "tooltip")
@@ -250,27 +238,20 @@
         .attr("x", 0)
         .attr("y", 52);
 
-
       //hover over function displaying state name,
       map.selectAll(".state").on('mouseover', function (event, d) {
         // Make tooltip visible
         tooltip.style("visibility", "visible")
 
         let state = d3.select(this);
-        // let stateID = stateObjs.state;
-        // let stateKey = stateObjs.stateAbbrev;
-        console.log(state.datum());
+        // console.log(state.datum());
 
         let bounds = path.bounds(state.datum());   // Get the pixel boundaries of the state
 
-        // center the tooltip beneath each state (this actually is not working rn)
+        // center the tooltip beneath each state
         let xPos = (bounds[0][0] + bounds[1][0]) / 2.0;
         let yPos = bounds[1][1] - 15;
-
-        // ^^not working
         tooltip.attr("transform", `translate(${xPos},${yPos})`);
-
-        // var mo = topojson.mesh(us, us.objects.states, function (a, b) { return a.id === stateID || b.id === stateID; });
 
         let stateProperties = state.datum()['properties'];
         let stateName = stateProperties['name'];
@@ -282,23 +263,16 @@
           }
         });
 
-        // momesh.datum(mo).attr("d", path);
+        var mo = topojson.mesh(us, us.objects.states, function (a, b) { return a['properties']['name'] === stateName || b['properties']['name'] === stateName; });
+        momesh.datum(mo).attr("d", path);
       });
 
-
-
       map.on('mouseout', function (event, d) {
-
         // remove tooltip when you leave a state
         tooltip.style("visibility", "hidden");
         let state = d3.select(this);
-        // momesh.attr("d", "");
-      })
-      return (stateObjs);
-    
-
-
-      // var stateDict = {};   // stateID ===> stateData
+        momesh.attr("d", "");
+      });
     }
     requestData();
   </script>
@@ -462,7 +436,7 @@
 
       //create array for x-axis scale, which is categorical (states instead of numbers)
       let states = []
-      
+
 
       stateObjs.forEach(d => {
         states.push(d['stateAbbrev'])
@@ -514,23 +488,23 @@
         .attr("transform", `translate(${margins.left}, ${margins.bottom})`) //move axis to correct position
         .call(yAxis);
 
-        
-    // Add x-axis label (States)
-    barChart.append("text")
-      .attr("class", "x axis-label")
-      .attr("x", barChartWidth / 2)  // Center the label horizontally based on the width of the chart
-      .attr("y", barChartHeight + 80) // Position below the x-axis (adjust as needed)
-      .attr("text-anchor", "middle") // Align the text in the center
-      .text("States");
 
-    // Add y-axis label (Funding)
-    barChart.append("text")
-      .attr("class", "y axis-label")
-      .attr("transform", "rotate(-90)") // Rotate the label 90 degrees for vertical alignment
-      .attr("x", -barChartHeight / 2)  // Position to the left of the y-axis (center it vertically)
-      .attr("y", -60) // Adjust position up from the y-axis (adjust as needed)
-      .attr("text-anchor", "middle") // Center the text horizontally
-      .text("Funding ($)");
+      // Add x-axis label (States)
+      barChart.append("text")
+        .attr("class", "x axis-label")
+        .attr("x", barChartWidth / 2)  // Center the label horizontally based on the width of the chart
+        .attr("y", barChartHeight + 80) // Position below the x-axis (adjust as needed)
+        .attr("text-anchor", "middle") // Align the text in the center
+        .text("States");
+
+      // Add y-axis label (Funding)
+      barChart.append("text")
+        .attr("class", "y axis-label")
+        .attr("transform", "rotate(-90)") // Rotate the label 90 degrees for vertical alignment
+        .attr("x", -barChartHeight / 2)  // Position to the left of the y-axis (center it vertically)
+        .attr("y", -60) // Adjust position up from the y-axis (adjust as needed)
+        .attr("text-anchor", "middle") // Center the text horizontally
+        .text("Funding ($)");
 
 
 
