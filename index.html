@@ -256,6 +256,19 @@
         // center the tooltip beneath each state
         let xPos = (bounds[0][0] + bounds[1][0]) / 2.0;
         let yPos = bounds[1][1] - 15;
+        // prevent tooltip from going off edge of svg
+        if (xPos + (tooltipWidth / 2.0) > width) {
+          let excessWidth = (xPos + (tooltipWidth / 2.0)) - width;
+          xPos = xPos - excessWidth;
+        }
+        if (xPos - (tooltipWidth / 2.0) < 0) {
+          let excessWidth = 0 - (xPos - (tooltipWidth / 2.0));
+          xPos = xPos + excessWidth;
+        }
+        if (yPos + (tooltipHeight / 2.0) > height) {
+          let excessWidth = yPos + (tooltipHeight / 2.0) - height;
+          yPos = yPos - excessWidth;
+        }
         tooltip.attr("transform", `translate(${xPos},${yPos})`);
 
         let stateProperties = state.datum()['properties'];
@@ -338,6 +351,8 @@
       //y axis
       const yAxis = d3.axisLeft(fundingScale); //create yAxis
 
+      /*** Bar Chart Labels ***/
+
       barChart.append("g")
         .attr("class", "y axis")
         .attr("transform", `translate(${bCMargins.left}, ${bCMargins.bottom})`) //move axis to correct position
@@ -386,6 +401,7 @@
   </script>
   <script>
     /*** Legend function ***/
+
     // This function was not designed by us. This function was
     // created by Jeff Rzeszotarski, 2022. 
 
