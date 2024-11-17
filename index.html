@@ -27,6 +27,10 @@
       stroke: grey;
       stroke-width: 1px;
     }
+
+    .reset-zoom-btn {
+      cursor: pointer;
+    }
   </style>
 </head>
 
@@ -34,7 +38,7 @@
   <!-- HTML Structure -->
   <h1>Project 2</h1>
   <h3>Map</h3>
-  <svg id="disaster-svg" height="600" width="900" style="background: #445; margin-top:50px"></svg>
+  <svg id="disaster-svg" height="600" width="900" style="background: #445; margin-top:50px;"></svg>
   <h3>Legend</h3>
   <svg id="legend-svg" height="100" width="400"></svg>
   <h3>Bar Chart</h3>
@@ -197,7 +201,7 @@
       let stateColorScale = d3.scaleSequential(d3.interpolateYlOrRd)
         .domain(d3.extent(stateObjs, d => d['numDisasters']));
 
-      map.selectAll(".state").filter(d => d['properties']['name'] in stateDict)
+      map.selectAll("path.state").filter(d => d['properties']['name'] in stateDict)
         .style("fill", d => {
           let stData = stateDict[d['properties']['name']];
           return stateColorScale(stData['numDisasters']);
@@ -246,37 +250,38 @@
         .attr("y", 52);
 
       //hover over function displaying state name,
-      map.selectAll(".state").on('mouseover', function (event, d) {
-        // Make tooltip visible
-        tooltip.style("visibility", "visible")
-
+      map.selectAll("path.state").on('mouseover', function (event, d) {
         let state = d3.select(this);
-
-        let bounds = path.bounds(state.datum());   // Get the pixel boundaries of the state
-        // center the tooltip beneath each state
-        let xPos = (bounds[0][0] + bounds[1][0]) / 2.0;
-        let yPos = bounds[1][1] - 15;
-        // prevent tooltip from going off edge of svg
-        if (xPos + (tooltipWidth / 2.0) > width) {
-          let excessWidth = (xPos + (tooltipWidth / 2.0)) - width;
-          xPos = xPos - excessWidth;
-        }
-        if (xPos - (tooltipWidth / 2.0) < 0) {
-          let excessWidth = 0 - (xPos - (tooltipWidth / 2.0));
-          xPos = xPos + excessWidth;
-        }
-        if (yPos + (tooltipHeight / 2.0) > height) {
-          let excessWidth = yPos + (tooltipHeight / 2.0) - height;
-          yPos = yPos - excessWidth;
-        }
-        tooltip.attr("transform", `translate(${xPos},${yPos})`);
-
         let stateProperties = state.datum()['properties'];
         let stateName = stateProperties['name'];
-        // let stAbbr = stData['stateAbbrev'];
-        txt.text(stateName);
-        txt2.text(`Number of Total Disasters: ${stateDict[stateName]['numDisasters']}`);
-        txt3.text(`Total $ Allocated for Assistance: $${Math.round(stateDict[stateName]['amntAllocated'])}`);
+
+        // if zoomed on on state, don't show tooltip in normal area
+        if (!stateZoom) {
+          let bounds = path.bounds(state.datum());   // Get the pixel boundaries of the state
+          // center the tooltip beneath each state
+          let xPos = (bounds[0][0] + bounds[1][0]) / 2.0;
+          let yPos = bounds[1][1] - 15;
+          // prevent tooltip from going off edge of svg
+          if (xPos + (tooltipWidth / 2.0) > width) {
+            let excessWidth = (xPos + (tooltipWidth / 2.0)) - width;
+            xPos = xPos - excessWidth;
+          }
+          if (xPos - (tooltipWidth / 2.0) < 0) {
+            let excessWidth = 0 - (xPos - (tooltipWidth / 2.0));
+            xPos = xPos + excessWidth;
+          }
+          if (yPos + (tooltipHeight / 2.0) > height) {
+            let excessWidth = yPos + (tooltipHeight / 2.0) - height;
+            yPos = yPos - excessWidth;
+          }
+          // Make tooltip visible
+          tooltip.style("visibility", "visible");
+          tooltip.attr("transform", `translate(${xPos},${yPos})`);
+
+          txt.text(stateName);
+          txt2.text(`Number of Total Disasters: ${stateDict[stateName]['numDisasters']}`);
+          txt3.text(`Total $ Allocated for Assistance: $${Math.round(stateDict[stateName]['amntAllocated'])}`);
+        }
 
         var mo = topojson.mesh(us, us.objects.states, function (a, b) { return a['properties']['name'] === stateName || b['properties']['name'] === stateName; });
         momesh.datum(mo).attr("d", path);
@@ -394,6 +399,107 @@
           .style("stroke", "darkblue")
           .style("stroke-width", 10);
       });
+
+      /*** Zoom functionality ***/
+
+      let stateZoom = false; // true if map is zoomed in on state, false otherwise
+      let buttonWidth = 90;
+      let buttonHeight = 30;
+
+      let resetZoomBtn = svg.append("g")
+        .attr("class", "reset-zoom-btn")
+        .attr("visibility", "hidden")
+        .attr("transform", `translate(${0},${0})`)
+        .on("click", resetZoom);
+      resetZoomBtn.append("rect")
+        .attr("fill", "lightgray")
+        .attr("x", 0)
+        .attr("y", 0)
+        .attr("width", buttonWidth)
+        .attr("height", buttonHeight)
+      resetZoomBtn.append("text")
+        .attr("class", "zoom-txt")
+        .text("Reset Zoom")
+        .attr("fill", "black")
+        .attr("text-anchor", "middle")
+        .attr("alignment-baseline", "hanging")
+        .attr("x", buttonWidth / 2.0)
+        .attr("y", (buttonHeight / 2.0) + 5);
+      resetZoomBtn.attr("visibility", "hidden"); // hide btn by default
+
+      // must have .on() for zoom event for click zooming to work
+      let zoom = d3.zoom()
+        .scaleExtent([1, 10])
+        .on("zoom", mapZoomed)
+        .translateExtent([[-50, -50], [mapWidth + 100, mapHeight + 50]]);
+      // calling zoom just in case code needs to be executed before user plays with map
+      map.call(zoom);
+
+      map.selectAll("path.state").on("click", stateClicked);
+
+      function mapZoomed({ transform }) {
+        map.attr("transform", transform.toString());
+
+        // ensure consistent outline widths for states
+        map.select(".outline")
+          .style("stroke-width", 2 / transform.k);
+      }
+
+      function stateClicked(event, d) {
+        stateZoom = true;
+        // calculate bounds of state to zoom in on state center
+        let bounds = path.bounds(d.geometry);
+        let stateWidth = bounds[1][0] - bounds[0][0];
+        let stateHeight = bounds[1][1] - bounds[0][1];
+        let centerX = (bounds[0][0] + bounds[1][0]) / 2;
+        let centerY = (bounds[0][1] + bounds[1][1]) / 2;
+
+        // stateWidth / mapWidth or stateHeight / mapHeight
+        // is proportion of screen that state takes up in the default
+        // map (no zoom). If those values are lower, need
+        // to zoom in more. As a result, we pick the
+        // higher of the two in the scale calculation
+        let spaceFrac = Math.max(
+          stateWidth / mapWidth, stateHeight / mapHeight);
+        // want Zoom to be in between 1 and 10, so
+        // we take Math.min of 10 and
+        // scaleVal / (proportion of space state takes up)
+        // the lower the numerator of scaleVal, the less zoomed in the state is
+        let scale = Math.max(1, Math.min(10, 0.7 / spaceFrac));
+        // want to "translate" the point at the middle
+        // of the map to the middle of the entire screen
+        let translate = [
+          (mapWidth / 2) - (centerX * scale),
+          (mapHeight / 2) - (centerY * scale)];
+        // tell the zoom where to move the screen
+        let newTransform = d3.zoomIdentity
+          .translate(translate[0], translate[1])
+          .scale(scale);
+        // use this to call zoom and add animation
+        tooltip.style("visibility", "hidden");
+        map.transition()
+          .duration(1000)
+          .call(zoom.transform, newTransform)
+          .on("end", () => {
+            // show reset zoom button
+            resetZoomBtn.attr("visibility", "visible");
+          });
+      }
+
+      function resetZoom() {
+        // hide reset zoom button
+        resetZoomBtn.attr("visibility", "hidden");
+        map.transition()
+          .duration(1000)
+          .call(zoom.transform, d3.zoomIdentity)
+          // Source for .on("end"): https://d3js.org/d3-transition/control-flow
+          .on("end", function () {
+            // give on mouseover function back to states after transition done
+            stateZoom = false;
+          });
+      }
+
+      /*** Legend ***/
 
       drawLegend("#legend-svg", stateColorScale);
     }
