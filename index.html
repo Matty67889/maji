@@ -35,6 +35,8 @@
   <h1>Project 2</h1>
   <h3>Map</h3>
   <svg id="disaster-svg" height="600" width="900" style="background: #445; margin-top:50px"></svg>
+  <h3>Legend</h3>
+  <svg id="legend-svg" height="100" width="400"></svg>
   <h3>Bar Chart</h3>
   <svg id="bar-chart" height="600" width="1100"></svg>
 
@@ -63,6 +65,7 @@
       let statesMesh = topojson.mesh(us, us.objects.states);
       let projection = d3.geoAlbersUsa().fitSize([mapWidth, mapHeight], states);
       let path = d3.geoPath().projection(projection);
+      console.log("states:\n", states);
 
       let graticule = d3.geoGraticule10();
       console.log("graticule:\n", graticule);
@@ -93,57 +96,112 @@
         "MT", "NE", "NV", "NH", "NJ", "NM", "NY", "NC", "ND",
         "OH", "OK", "OR", "PA", "RI", "SC", "SD", "TN", "TX",
         "UT", "VT", "VA", "WA", "WV", "WI", "WY"];
-      let stateToAbbrevDict = {
-        "Alabama": "AL",
-        "Alaska": "AK",
-        "Arizona": "AZ",
-        "Arkansas": "AR",
-        "California": "CA",
-        "Colorado": "CO",
-        "Connecticut": "CT",
-        "Delaware": "DE",
-        "Florida": "FL",
-        "Georgia": "GA",
-        "Hawaii": "HI",
-        "Idaho": "ID",
-        "Illinois": "IL",
-        "Indiana": "IN",
-        "Iowa": "IA",
-        "Kansas": "KS",
-        "Kentucky": "KY",
-        "Louisiana": "LA",
-        "Maine": "ME",
-        "Maryland": "MD",
-        "Massachusetts": "MA",
-        "Michigan": "MI",
-        "Minnesota": "MN",
-        "Mississippi": "MS",
-        "Missouri": "MO",
-        "Montana": "MT",
-        "Nebraska": "NE",
-        "Nevada": "NV",
-        "New Hampshire": "NH",
-        "New Jersey": "NJ",
-        "New Mexico": "NM",
-        "New York": "NY",
-        "North Carolina": "NC",
-        "North Dakota": "ND",
-        "Ohio": "OH",
-        "Oklahoma": "OK",
-        "Oregon": "OR",
-        "Pennsylvania": "PA",
-        "Rhode Island": "RI",
-        "South Carolina": "SC",
-        "South Dakota": "SD",
-        "Tennessee": "TN",
-        "Texas": "TX",
-        "Utah": "UT",
-        "Vermont": "VT",
-        "Virginia": "VA",
-        "Washington": "WA",
-        "West Virginia": "WV",
-        "Wisconsin": "WI",
-        "Wyoming": "WY",
+      // let stateToAbbrevDict = {
+      //   "Alabama": "AL",
+      //   "Alaska": "AK",
+      //   "Arizona": "AZ",
+      //   "Arkansas": "AR",
+      //   "California": "CA",
+      //   "Colorado": "CO",
+      //   "Connecticut": "CT",
+      //   "Delaware": "DE",
+      //   "Florida": "FL",
+      //   "Georgia": "GA",
+      //   "Hawaii": "HI",
+      //   "Idaho": "ID",
+      //   "Illinois": "IL",
+      //   "Indiana": "IN",
+      //   "Iowa": "IA",
+      //   "Kansas": "KS",
+      //   "Kentucky": "KY",
+      //   "Louisiana": "LA",
+      //   "Maine": "ME",
+      //   "Maryland": "MD",
+      //   "Massachusetts": "MA",
+      //   "Michigan": "MI",
+      //   "Minnesota": "MN",
+      //   "Mississippi": "MS",
+      //   "Missouri": "MO",
+      //   "Montana": "MT",
+      //   "Nebraska": "NE",
+      //   "Nevada": "NV",
+      //   "New Hampshire": "NH",
+      //   "New Jersey": "NJ",
+      //   "New Mexico": "NM",
+      //   "New York": "NY",
+      //   "North Carolina": "NC",
+      //   "North Dakota": "ND",
+      //   "Ohio": "OH",
+      //   "Oklahoma": "OK",
+      //   "Oregon": "OR",
+      //   "Pennsylvania": "PA",
+      //   "Rhode Island": "RI",
+      //   "South Carolina": "SC",
+      //   "South Dakota": "SD",
+      //   "Tennessee": "TN",
+      //   "Texas": "TX",
+      //   "Utah": "UT",
+      //   "Vermont": "VT",
+      //   "Virginia": "VA",
+      //   "Washington": "WA",
+      //   "West Virginia": "WV",
+      //   "Wisconsin": "WI",
+      //   "Wyoming": "WY",
+      // }
+      // for (const [key, value] of Object.entries(stateToAbbrevDict)) {
+      //   console.log(`"${value}": "${key}",`);
+      // }
+      let abbrevToState = {
+        "AL": "Alabama",
+        "AK": "Alaska",
+        "AZ": "Arizona",
+        "AR": "Arkansas",
+        "CA": "California",
+        "CO": "Colorado",
+        "CT": "Connecticut",
+        "DE": "Delaware",
+        "FL": "Florida",
+        "GA": "Georgia",
+        "HI": "Hawaii",
+        "ID": "Idaho",
+        "IL": "Illinois",
+        "IN": "Indiana",
+        "IA": "Iowa",
+        "KS": "Kansas",
+        "KY": "Kentucky",
+        "LA": "Louisiana",
+        "ME": "Maine",
+        "MD": "Maryland",
+        "MA": "Massachusetts",
+        "MI": "Michigan",
+        "MN": "Minnesota",
+        "MS": "Mississippi",
+        "MO": "Missouri",
+        "MT": "Montana",
+        "NE": "Nebraska",
+        "NV": "Nevada",
+        "NH": "New Hampshire",
+        "NJ": "New Jersey",
+        "NM": "New Mexico",
+        "NY": "New York",
+        "NC": "North Carolina",
+        "ND": "North Dakota",
+        "OH": "Ohio",
+        "OK": "Oklahoma",
+        "OR": "Oregon",
+        "PA": "Pennsylvania",
+        "RI": "Rhode Island",
+        "SC": "South Carolina",
+        "SD": "South Dakota",
+        "TN": "Tennessee",
+        "TX": "Texas",
+        "UT": "Utah",
+        "VT": "Vermont",
+        "VA": "Virginia",
+        "WA": "Washington",
+        "WV": "West Virginia",
+        "WI": "Wisconsin",
+        "WY": "Wyoming"
       }
       // filter out data that is not states
       let filteredFema = fema.filter(d => stateAbbrevs.includes(d['State']));
@@ -155,57 +213,93 @@
 
       /*** Data aggregation ***/
 
-      // create list of objects that contain info on each state
-      let stateObjs = []
-
-      for (const [key, value] of Object.entries(stateToAbbrevDict)) {
-        stateObjs.push({
-          'state': key,
-          'stateAbbrev': value,
-          'amntAllocated': 0,
-          'numDisasters': 0,
-          'uniqueDisasters': []
-        });
-      }
+      // create dictionary mapping states to info about that state
+      let stateDict = {}
 
       filteredFema.forEach(d => {
-        let currState = d['State'];
+        let currStateAbbrev = d['State'].trim();
+        let currState = abbrevToState[currStateAbbrev];
         let amntAllocated = d['Announced/Allocated'];
-
-        stateObjs.forEach(obj => {
-          if (obj['stateAbbrev'] === currState) {
-            obj['amntAllocated'] += amntAllocated;
-            obj['numDisasters'] += 1;
-          }
-        });
+        if (currState in stateDict) {
+          stateDict[currState]['amntAllocated'] += amntAllocated;
+        } else {
+          stateDict[currState] = {
+            'stateAbbrev': currStateAbbrev,
+            'amntAllocated': amntAllocated,
+            'numDisasters': 0,
+            'uniqueDisasters': []
+          };
+        }
       });
-
       disasterData.forEach(d => {
-        let currState = d['state'];
-        let disasterName = d['incident_type'];
-
-        stateObjs.forEach(obj => {
-          if (obj['stateAbbrev'] === currState) {
-            if (!obj['uniqueDisasters'].includes(disasterName)) {
-              obj['uniqueDisasters'].push(disasterName);
-            }
+        let currStateAbbrev = d['state'].trim();
+        let currState = abbrevToState[currStateAbbrev];
+        let disasterName = d['incident_type'].trim();
+        if (currState in stateDict) {
+          stateDict[currState]['numDisasters'] += 1;
+          if (!stateDict[currState]['uniqueDisasters'].includes(disasterName)) {
+            stateDict[currState]['uniqueDisasters'].push(disasterName);
           }
-        });
+        }
       });
+      console.log("stateDict:\n", stateDict);
+      let stateObjs = Object.values(stateDict);
+      console.log("stateObjs:\n", stateObjs);
 
-      // console.log(stateObjs);
+      // create list of objects that contain info on each state
+      // let stateObjs = []
+
+      // for (const [key, value] of Object.entries(stateToAbbrevDict)) {
+      //   stateObjs.push({
+      //     'state': key,
+      //     'stateAbbrev': value,
+      //     'amntAllocated': 0,
+      //     'numDisasters': 0,
+      //     'uniqueDisasters': []
+      //   });
+      // }
+
+      // filteredFema.forEach(d => {
+      //   let currState = d['State'];
+      //   let amntAllocated = d['Announced/Allocated'];
+
+      //   stateObjs.forEach(obj => {
+      //     if (obj['stateAbbrev'] === currState) {
+      //       obj['amntAllocated'] += amntAllocated;
+      //     }
+      //   });
+      // });
+
+      // disasterData.forEach(d => {
+      //   let currState = d['state'];
+      //   let disasterName = d['incident_type'];
+
+      //   stateObjs.forEach(obj => {
+      //     if (obj['stateAbbrev'] === currState) {
+      //       obj['numDisasters'] += 1;
+      //       if (!obj['uniqueDisasters'].includes(disasterName)) {
+      //         obj['uniqueDisasters'].push(disasterName);
+      //       }
+      //     }
+      //   });
+      // });
+
+      // console.log("stateObjs\n", stateObjs);
 
       // create color scales
-      let stateColorScale = d3.scaleOrdinal()
-        .domain(d3.extent(stateObjs, d => d['numDisasters']))
-        .range(d3.schemeObservable10);
+      // color scale source: https://d3js.org/d3-scale-chromatic/sequential
+      let stateColorScale = d3.scaleSequential(d3.interpolateYlOrRd)
+        .domain(d3.extent(stateObjs, d => d['numDisasters']));
 
-      map.selectAll(".state").filter(d => d['properties']['name'] in stateToAbbrevDict)
-        .style("fill", d => stateColorScale(stateToAbbrevDict[d['properties']['name']]));
+      map.selectAll(".state").filter(d => d['properties']['name'] in stateDict)
+        .style("fill", d => {
+          let stData = stateDict[d['properties']['name']];
+          return stateColorScale(stData['numDisasters']);
+        });
 
       /*** Tooltips ***/
 
-      // source prof Rz 10.09 tooltip stub
+      // Source: Prof Rzeszotarski 10.09 notes tooltip stub
       let tooltipWidth = 400;
       let tooltipHeight = 80;
 
@@ -262,13 +356,17 @@
 
         let stateProperties = state.datum()['properties'];
         let stateName = stateProperties['name'];
-        stateObjs.forEach(element => {
-          if (element['state'] === stateName) {
-            txt.text(element['state']);
-            txt2.text(`Number of Total Disasters: ${element['numDisasters']}`);
-            txt3.text(`Total $ Allocated for Assistance: $${Math.round(element['amntAllocated'])}`);
-          }
-        });
+        // let stAbbr = stData['stateAbbrev'];
+        txt.text(stateName);
+        txt2.text(`Number of Total Disasters: ${stateDict[stateName]['numDisasters']}`);
+        txt3.text(`Total $ Allocated for Assistance: $${Math.round(stateDict[stateName]['amntAllocated'])}`);
+        // stateObjs.forEach(element => {
+        //   if (element['state'] === stateName) {
+        //     txt.text(element['state']);
+        //     txt2.text(`Number of Total Disasters: ${element['numDisasters']}`);
+        //     txt3.text(`Total $ Allocated for Assistance: $${Math.round(element['amntAllocated'])}`);
+        //   }
+        // });
 
         var mo = topojson.mesh(us, us.objects.states, function (a, b) { return a['properties']['name'] === stateName || b['properties']['name'] === stateName; });
         momesh.datum(mo).attr("d", path);
@@ -318,14 +416,14 @@
         .range([bCMargins.top, barChartWidth - bCMargins.left]);
 
       // create domain for y-axis scale
-      let funding = []
+      // let funding = []
 
-      stateObjs.forEach(d => {
-        funding.push(d['amntAllocated'])
-      });
+      // stateObjs.forEach(d => {
+      //   funding.push(d['amntAllocated'])
+      // });
 
       //two-item array containing min and max values of funding
-      let fundingExtent = d3.extent(funding);
+      let fundingExtent = d3.extent(stateObjs, d => d['amntAllocated']);
 
       // y-axis scale for bar chart
       const fundingScale = d3.scaleLinear()
@@ -384,7 +482,165 @@
           .style("stroke", "darkblue")
           .style("stroke-width", 10);
       });
+
+      drawLegend("#legend-svg", stateColorScale);
     }
     requestData();
+  </script>
+  <script>
+    /*** Legend function ***/
+    // This function was not designed by us. This function was
+    // created by Jeff Rzeszotarski, 2022. 
+
+    // Flexible legend-drawing function - Jeff Rzeszotarski, 2022
+    //   Released under MIT Free license
+    //  Takes in an SVG element selector <legendSelector> and a d3 color scale <legendColorScale>
+    //
+    // Usage example: drawLegend("#legendID", grossIncomeColorScale)
+    function drawLegend(legendSelector, legendColorScale) {
+
+      // This code should adapt to a variety of different kinds of color scales
+      //  Credit Prof. Rz if you are basing a legend on this structure, and note PERFORMANCE CONSIDERATIONS
+
+      // Shrink legend bar by 5 px inwards from sides of SVG
+      const offsets = {
+        width: 10,
+        top: 2,
+        bottom: 24
+      };
+      // Number of integer 'pixel steps' to draw when showing continuous scales
+      //    Warning, not using a canvas element so lots of rect tags will be created for low stepSize, causing issues with performance -- keep this large
+      const stepSize = 4;
+      // Extend the minmax by 0% in either direction to expose more features by default
+      const minMaxExtendPercent = 0;
+
+
+      const legend = d3.select(legendSelector);
+      const legendHeight = legend.attr("height");
+      const legendBarWidth = legend.attr("width") - (offsets.width * 2);
+      const legendMinMax = d3.extent(legendColorScale.domain());
+      // recover the min and max values from most kinds of numeric scales
+      const minMaxExtension = (legendMinMax[1] - legendMinMax[0]) * minMaxExtendPercent;
+      const barHeight = legendHeight - offsets.top - offsets.bottom;
+
+      // In this case the "data" are pixels, and we get numbers to use in colorScale
+      // Use this to make axis labels
+      let barScale = d3.scaleLinear().domain([legendMinMax[0] - minMaxExtension,
+      legendMinMax[1] + minMaxExtension])
+        .range([0, legendBarWidth]);
+      let barAxis = d3.axisBottom(barScale);
+
+      // Place for bar slices to live
+      let bar = legend.append("g")
+        .attr("class", "legend colorbar")
+        .attr("transform", `translate(${offsets.width},${offsets.top})`)
+
+      // ****** SWITCHES FOR DIFFERENT SCALE TYPES ******
+
+      // Check if we're using a binning scale - if so, we make blocks of color
+      if (legendColorScale.hasOwnProperty('thresholds') || legendColorScale.hasOwnProperty('quantiles')) {
+        // Get the thresholds
+        let thresholds = [];
+        if (legendColorScale.hasOwnProperty('thresholds')) { thresholds = legendColorScale.thresholds() }
+        else { thresholds = legendColorScale.quantiles() }
+
+        const barThresholds = [legendMinMax[0], ...thresholds, legendMinMax[1]];
+
+        // Use the quantile breakpoints plus the min and max of the scale as tick values
+        barAxis.tickValues(barThresholds);
+
+        // Draw rectangles between the threshold segments
+        for (let i = 0; i < barThresholds.length - 1; i++) {
+          let dataStart = barThresholds[i];
+          let dataEnd = barThresholds[i + 1];
+          let pixelStart = barAxis.scale()(dataStart);
+          let pixelEnd = barAxis.scale()(dataEnd);
+
+          bar.append("rect")
+            .attr("x", pixelStart)
+            .attr("y", 0)
+            .attr("width", pixelEnd - pixelStart)
+            .attr("height", barHeight)
+            .style("fill", legendColorScale((dataStart + dataEnd) / 2.0));
+        }
+      }
+      // Else if we have a continuous / roundable scale
+      //  In an ideal world you might construct a custom gradient mapped to the scale
+      //  For this one, we use a hack of making stepped rects
+      else if (legendColorScale.hasOwnProperty('rangeRound')) {
+        // NOTE: The barAxis may round min and max values to make them pretty
+        // ** This also means there is a risk of the legend going beyond scale bounds
+        // We need to use the barAxis min and max just to be sure the bar is complete
+        //    Using barAxis.scale().invert() goes from *axis* pixels to data values easily
+        // ** We also need to create patches for the scale if the labels exceed bounds
+        //     (floating point comparisons risky for small data ranges,but not a big deal
+        //      because patches will be indistinguishable from actual scale bottom)
+        // It's likely that scale clamping will actually do this for us elegantly
+        // ...but better to be safer and patch the regions anyways
+
+        for (let i = 0; i < legendBarWidth; i = i + stepSize) {
+
+          let center = i + (stepSize / 2);
+          let dataCenter = barAxis.scale().invert(center);
+
+          // below normal scale bounds
+          if (dataCenter < legendMinMax[0]) {
+            bar.append("rect")
+              .attr("x", i)
+              .attr("y", 0)
+              .attr("width", stepSize)
+              .attr("height", barHeight)
+              .style("fill", legendColorScale(legendMinMax[0]));
+          }
+          // within normal scale bounds
+          else if (dataCenter < legendMinMax[1]) {
+            bar.append("rect")
+              .attr("x", i)
+              .attr("y", 0)
+              .attr("width", stepSize)
+              .attr("height", barHeight)
+              .style("fill", legendColorScale(dataCenter));
+          }
+          // above normal scale bounds
+          else {
+            bar.append("rect")
+              .attr("x", i)
+              .attr("y", 0)
+              .attr("width", stepSize)
+              .attr("height", barHeight)
+              .style("fill", legendColorScale(legendMinMax[1]));
+          }
+
+        }
+      }
+      // Otherwise we have a nominal scale
+      else {
+        let nomVals = legendColorScale.domain().sort();
+
+        // Use a scaleBand to make blocks of color and simple labels
+        let barScale = d3.scaleBand().domain(nomVals)
+          .range([0, legendBarWidth])
+          .padding(0.05);
+        barAxis.scale(barScale);
+
+        // Draw rectangles for each nominal entry
+        nomVals.forEach(d => {
+          bar.append("rect")
+            .attr("x", barScale(d))
+            .attr("y", 0)
+            .attr("width", barScale.bandwidth())
+            .attr("height", barHeight)
+            .style("fill", legendColorScale(d));
+        });
+      }
+      // DONE w/SWITCH
+
+      // Finally, draw legend labels
+      legend.append("g")
+        .attr("class", "legend axis")
+        .attr("transform", `translate(${offsets.width},${offsets.top + barHeight + 5})`)
+        .call(barAxis);
+
+    }
   </script>
 </body>
