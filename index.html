@@ -358,14 +358,15 @@
       const svgWidth = barChart.attr("width");
       const svgHeight = barChart.attr("height");
 
-      const bCMargins = { top: 20, right: 20, bottom: 50, left: 80 };
+      const bCMargins = { top: 20, right: 100, bottom: 150, left: 150 };
       // create bar chart's area & set its dimensions
       const barChartWidth = svgWidth - bCMargins.left - bCMargins.right;
       const barChartHeight = svgHeight - bCMargins.top - bCMargins.bottom;
 
       const barChartArea = barChart.append("g")
-        .attr("transform", `translate(${bCMargins.left}, ${bCMargins.bottom})`);
+        .attr("transform", `translate(${bCMargins.left}, ${bCMargins.top})`);
 
+        
       // // x-axis scale for bar chart
       // const stateScale = d3.scaleLinear()
       //           .domain([0,50])
@@ -406,7 +407,7 @@
 
       barChart.append("g")
         .attr("class", "x axis")
-        .attr("transform", `translate(${bCMargins.left}, ${bCMargins.bottom + barChartHeight})`) //move axis to correct position
+        .attr("transform", `translate(${bCMargins.left}, ${bCMargins.top + barChartHeight})`) //move axis to correct position
         .call(xAxis);
 
       //y axis
@@ -414,27 +415,29 @@
 
       barChart.append("g")
         .attr("class", "y axis")
-        .attr("transform", `translate(${bCMargins.left}, ${bCMargins.bottom})`) //move axis to correct position
+        .attr("transform", `translate(${bCMargins.left}, ${bCMargins.top})`) //move axis to correct position
         .call(yAxis);
 
-      /*** Bar Chart Labels ***/
+        // Add x-axis label (States)
+     barChart.append("text")
+       .attr("class", "x axis-label")
+       .attr("x", (bCMargins.left + barChartWidth) / 2) // Center the label horizontally based on the width of the chart
+       .attr("y", barChartHeight + 80) // Position below the x-axis (adjust as needed)
+       .attr("text-anchor", "middle") // Align the text in the center
+       .text("States");
 
-      // Add x-axis label (States)
-      barChart.append("text")
-        .attr("class", "x axis-label")
-        .attr("x", barChartWidth / 2)  // Center the label horizontally based on the width of the chart
-        .attr("y", barChartHeight + 80) // Position below the x-axis (adjust as needed)
-        .attr("text-anchor", "middle") // Align the text in the center
-        .text("States");
 
-      // Add y-axis label (Funding)
-      barChart.append("text")
-        .attr("class", "y axis-label")
-        .attr("transform", "rotate(-90)") // Rotate the label 90 degrees for vertical alignment
-        .attr("x", -barChartHeight / 2)  // Position to the left of the y-axis (center it vertically)
-        .attr("y", -60) // Adjust position up from the y-axis (adjust as needed)
-        .attr("text-anchor", "middle") // Center the text horizontally
-        .text("Funding ($)");
+   // Add y-axis label
+   barChartArea.append("text")
+     .attr("class", "y axis-label")
+     .attr("transform", "rotate(-90)")
+     .attr("x", -barChartHeight / 2)
+     .attr("y", -100)
+     .attr("text-anchor", "middle")
+     .text("Funding ($)");
+
+
+
 
       let stateNumericalDict = {
         "AL": 1, "AK": 2, "AZ": 3, "AR": 4, "CA": 5, "CO": 6, "CT": 7,
@@ -639,6 +642,8 @@
           .attr("transform", "rotate(-65)");
         dstrBCLeftAxis.scale(dstrCountScale);
         dstrBCLeftAxisG.transition().call(dstrBCLeftAxis);
+
+        
 
         // create bars with animation. for animation,
         // opacity is set to low value to give illusion
