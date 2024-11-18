@@ -38,7 +38,7 @@
   <h3>Legend</h3>
   <svg id="legend-svg" height="100" width="400"></svg>
   <h3>Bar Chart</h3>
-  <svg id="bar-chart" height="600" width="1100"></svg>
+  <svg id="bar-chart" height="600" width="1200"></svg>
 
   <!-- Scripts -->
   <script>
@@ -297,7 +297,7 @@
       const svgWidth = barChart.attr("width");
       const svgHeight = barChart.attr("height");
 
-      const bCMargins = { top: 20, right: 20, bottom: 50, left: 80 };
+      const bCMargins = { top: 20, right: 100, bottom: 150, left: 150 };
       // create bar chart's area & set its dimensions
       const barChartWidth = svgWidth - bCMargins.left - bCMargins.right;
       const barChartHeight = svgHeight - bCMargins.top - bCMargins.bottom;
@@ -305,6 +305,7 @@
       const barChartArea = barChart.append("g")
         .attr("transform", `translate(${bCMargins.left}, ${bCMargins.bottom})`);
 
+        
       // // x-axis scale for bar chart
       // const stateScale = d3.scaleLinear()
       //           .domain([0,50])
@@ -358,22 +359,22 @@
         .attr("transform", `translate(${bCMargins.left}, ${bCMargins.bottom})`) //move axis to correct position
         .call(yAxis);
 
-      // Add x-axis label (States)
-      barChart.append("text")
-        .attr("class", "x axis-label")
-        .attr("x", barChartWidth / 2)  // Center the label horizontally based on the width of the chart
-        .attr("y", barChartHeight + 80) // Position below the x-axis (adjust as needed)
-        .attr("text-anchor", "middle") // Align the text in the center
-        .text("States");
+          // Add x-axis label
+    barChartArea.append("text")
+      .attr("class", "x axis-label")
+      .attr("x", barChartWidth / 2)
+      .attr("y", barChartHeight + 50)
+      .attr("text-anchor", "middle")
+      .text("States");
 
-      // Add y-axis label (Funding)
-      barChart.append("text")
-        .attr("class", "y axis-label")
-        .attr("transform", "rotate(-90)") // Rotate the label 90 degrees for vertical alignment
-        .attr("x", -barChartHeight / 2)  // Position to the left of the y-axis (center it vertically)
-        .attr("y", -60) // Adjust position up from the y-axis (adjust as needed)
-        .attr("text-anchor", "middle") // Center the text horizontally
-        .text("Funding ($)");
+    // Add y-axis label
+    barChartArea.append("text")
+      .attr("class", "y axis-label")
+      .attr("transform", "rotate(-90)")
+      .attr("x", -barChartHeight / 2)
+      .attr("y", -100)
+      .attr("text-anchor", "middle")
+      .text("Funding ($)");
 
       let stateNumericalDict = {
         "AL": 1, "AK": 2, "AZ": 3, "AR": 4, "CA": 5, "CO": 6, "CT": 7,
