@@ -12,9 +12,6 @@
   <script src="https://d3js.org/topojson.v3.min.js"></script>
 
   <style>
-    .state {
-      /* fill: lightgrey; */
-    }
 
     .outline {
       fill: none;
@@ -24,7 +21,7 @@
 
     .graticule {
       fill: none;
-      stroke: grey;
+      stroke: rgb(123, 123, 123);
       stroke-width: 1px;
     }
 
@@ -42,28 +39,41 @@
       flex-direction: row;
       align-items: center;
     }
+    body {
+      background-color: #f1d4ce;
+    }
+    .map-title {
+      text-align: center;
+      background-color: darkred;
+      color: white;
+      padding: 20px;
+    }
   </style>
 </head>
 
 <body>
   <!-- HTML Structure -->
   <h1>Project 2</h1>
-  <h3>Map</h3>
+  <h2 class="map-title">United States by Disaster Severity</h2>
   <div class="flex-row">
+    
     <div class="flex-col">
-      <div>
-        <svg id="disaster-svg" height="600" width="800" style="background: #445; margin-top:50px;"></svg>
-      </div>
+      
       <div>
         <h3>Legend</h3>
         <svg id="legend-svg" height="50" width="400"></svg>
       </div>
+      <div>
+        
+        <svg id="disaster-svg" height="600" width="800" style="background: #f1d4ce; margin-top:50px;"></svg>
+      </div>
+      
     </div>
     <div>
-      <svg id="disaster-bar-chart-svg" height="600" width="900" style="border: 1px solid black;"></svg>
+      <svg id="disaster-bar-chart-svg" height="600" width="610" ></svg>
     </div>
   </div>
-  <h3>Bar Chart</h3>
+  <h3 class="map-title">States by FEMA Allocated Assistance</h3>
   <svg id="bar-chart" height="600" width="1100"></svg>
 
   <!-- Scripts -->
@@ -93,9 +103,9 @@
       let path = d3.geoPath().projection(projection);
       console.log("states:\n", states);
 
-      let graticule = d3.geoGraticule10();
-      console.log("graticule:\n", graticule);
-      map.append("path").attr("class", "graticule").attr("d", path(graticule));
+      // let graticule = d3.geoGraticule10();
+      // console.log("graticule:\n", graticule);
+      // map.append("path").attr("class", "graticule").attr("d", path(graticule));
 
       // Draw states
       let statePaths = map.selectAll("path.state").data(states.features)
@@ -319,12 +329,14 @@
             yPos = yPos - excessWidth;
           }
           // Make tooltip visible
+          const usCurr = d3.format("$,");
+
           tooltip.style("visibility", "visible");
           tooltip.attr("transform", `translate(${xPos},${yPos})`);
 
           txt.text(stateName);
           txt2.text(`Number of Total Disasters: ${stateDict[stateName]['numDisasters']}`);
-          txt3.text(`Total $ Allocated for Assistance: $${Math.round(stateDict[stateName]['amntAllocated'])}`);
+          txt3.text(`Total $ Allocated for Assistance: ${usCurr(Math.round(stateDict[stateName]['amntAllocated']))}`);
         }
 
         var mo = topojson.mesh(us, us.objects.states, function (a, b) { return a['properties']['name'] === stateName || b['properties']['name'] === stateName; });
@@ -382,11 +394,11 @@
       // });
 
       //two-item array containing min and max values of funding
-      let fundingExtent = d3.extent(stateObjs, d => d['amntAllocated']);
+      const fundingExtent = d3.extent(stateObjs, d => d['amntAllocated']);
 
       // y-axis scale for bar chart
-      const fundingScale = d3.scaleLinear()
-        .domain([0, fundingExtent[1]])
+      const fundingScale = d3.scaleLog()
+        .domain(fundingExtent)
         .range([barChartHeight, 10]);
 
       //x axis
@@ -440,10 +452,21 @@
           .attr("x2", stateScale(d['stateAbbrev']))
           .attr("y1", barChartHeight)
           .attr("y2", fundingScale(d['amntAllocated']))
-          .style("stroke", "darkblue")
+          .style("stroke", "darkred")
           .style("stroke-width", 10);
       });
-
+      // function updateBars(stateObjs){
+        const allocated = [];
+        stateObjs.forEach(state => {
+          allocated.push(state['amntAllocated']);
+        })
+        const sortedMoney = allocated.slice().sort((a, b) => b - a);
+        console.log(allocated);
+        console.log(sortedMoney);
+        
+        const updatedStates = d3.map(sortedMoney, d => d.stateAbbrev);
+        console.log(updatedStates);
+      // }
       /*** Zoom functionality ***/
 
       let stateZoom = false; // true if map is zoomed in on state, false otherwise
@@ -626,7 +649,7 @@
           .data(Object.entries(stateDstrData))
           .join(enter => enter.append('rect')
             .attr("class", "bar")
-            .attr("fill", "purple")
+            .attr("fill", "darkorange")
             .attr("x", d => dstrNameScale(d[0]))
             .attr("y", d => dstrCountScale(d[1]))
             // rectangles start from top, so height goes from top as well
@@ -638,7 +661,7 @@
             // update edited to animate movement of bars
             // and resizing for categories that already exist
             update => update.call(update => update.transition()
-              .attr("fill", "purple")
+              .attr("fill", "darkorange")
               .attr("x", d => dstrNameScale(d[0]))
               .attr("y", d => dstrCountScale(d[1]))
               .attr("height", d => dstrCountScale(0) - dstrCountScale(d[1]))
