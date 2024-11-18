@@ -409,7 +409,7 @@
         // Add x-axis label (States)
      barChart.append("text")
        .attr("class", "x axis-label")
-       .attr("x", barChartWidth / 2)  // Center the label horizontally based on the width of the chart
+       .attr("x", (bCMargins.left + barChartWidth) / 2) // Center the label horizontally based on the width of the chart
        .attr("y", barChartHeight + 80) // Position below the x-axis (adjust as needed)
        .attr("text-anchor", "middle") // Align the text in the center
        .text("States");
