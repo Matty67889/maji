@@ -27,6 +27,21 @@
       stroke: grey;
       stroke-width: 1px;
     }
+
+    .reset-zoom-btn {
+      cursor: pointer;
+    }
+
+    .flex-col {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .flex-row {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+    }
   </style>
 </head>
 
@@ -34,9 +49,20 @@
   <!-- HTML Structure -->
   <h1>Project 2</h1>
   <h3>Map</h3>
-  <svg id="disaster-svg" height="600" width="900" style="background: #445; margin-top:50px"></svg>
-  <h3>Legend</h3>
-  <svg id="legend-svg" height="100" width="400"></svg>
+  <div class="flex-row">
+    <div class="flex-col">
+      <div>
+        <svg id="disaster-svg" height="600" width="800" style="background: #445; margin-top:50px;"></svg>
+      </div>
+      <div>
+        <h3>Legend</h3>
+        <svg id="legend-svg" height="50" width="400"></svg>
+      </div>
+    </div>
+    <div>
+      <svg id="disaster-bar-chart-svg" height="600" width="900" style="border: 1px solid black;"></svg>
+    </div>
+  </div>
   <h3>Bar Chart</h3>
   <svg id="bar-chart" height="600" width="1200"></svg>
 
@@ -160,12 +186,22 @@
       /*** Data aggregation ***/
 
       // create dictionary mapping states to info about that state
-      let stateDict = {}
+      // one entry is for "All States", which is aggregate data for all states
+      let stateDict = {
+        'All States': {
+          'stateAbbrev': "No abbrev",
+          'amntAllocated': 0,
+          'numDisasters': 0,
+          'uniqueDisasters': {}
+        }
+      }
 
       filteredFema.forEach(d => {
         let currStateAbbrev = d['State'].trim();
         let currState = abbrevToState[currStateAbbrev];
         let amntAllocated = d['Announced/Allocated'];
+
+        stateDict['All States']['amntAllocated'] += amntAllocated;
         if (currState in stateDict) {
           stateDict[currState]['amntAllocated'] += amntAllocated;
         } else {
@@ -173,7 +209,7 @@
             'stateAbbrev': currStateAbbrev,
             'amntAllocated': amntAllocated,
             'numDisasters': 0,
-            'uniqueDisasters': []
+            'uniqueDisasters': {}
           };
         }
       });
@@ -181,15 +217,27 @@
         let currStateAbbrev = d['state'].trim();
         let currState = abbrevToState[currStateAbbrev];
         let disasterName = d['incident_type'].trim();
+
+        stateDict['All States']['numDisasters'] += 1;
+        if (!(disasterName in stateDict['All States']['uniqueDisasters'])) {
+          stateDict['All States']['uniqueDisasters'][disasterName] = 1;
+        }
+        else {
+          stateDict['All States']['uniqueDisasters'][disasterName] += 1;
+        }
         if (currState in stateDict) {
           stateDict[currState]['numDisasters'] += 1;
-          if (!stateDict[currState]['uniqueDisasters'].includes(disasterName)) {
-            stateDict[currState]['uniqueDisasters'].push(disasterName);
+          // update counts for each type of diaster
+          if (!(disasterName in stateDict[currState]['uniqueDisasters'])) {
+            stateDict[currState]['uniqueDisasters'][disasterName] = 1;
+          }
+          else {
+            stateDict[currState]['uniqueDisasters'][disasterName] += 1;
           }
         }
       });
       console.log("stateDict:\n", stateDict);
-      let stateObjs = Object.values(stateDict);
+      const stateObjs = Object.values(stateDict).slice(1); // don't want to have 'All Values' data in individual state data
       console.log("stateObjs:\n", stateObjs);
 
       // create color scales
@@ -197,7 +245,7 @@
       let stateColorScale = d3.scaleSequential(d3.interpolateYlOrRd)
         .domain(d3.extent(stateObjs, d => d['numDisasters']));
 
-      map.selectAll(".state").filter(d => d['properties']['name'] in stateDict)
+      map.selectAll("path.state").filter(d => d['properties']['name'] in stateDict)
         .style("fill", d => {
           let stData = stateDict[d['properties']['name']];
           return stateColorScale(stData['numDisasters']);
@@ -246,37 +294,38 @@
         .attr("y", 52);
 
       //hover over function displaying state name,
-      map.selectAll(".state").on('mouseover', function (event, d) {
-        // Make tooltip visible
-        tooltip.style("visibility", "visible")
-
+      map.selectAll("path.state").on('mouseover', function (event, d) {
         let state = d3.select(this);
-
-        let bounds = path.bounds(state.datum());   // Get the pixel boundaries of the state
-        // center the tooltip beneath each state
-        let xPos = (bounds[0][0] + bounds[1][0]) / 2.0;
-        let yPos = bounds[1][1] - 15;
-        // prevent tooltip from going off edge of svg
-        if (xPos + (tooltipWidth / 2.0) > width) {
-          let excessWidth = (xPos + (tooltipWidth / 2.0)) - width;
-          xPos = xPos - excessWidth;
-        }
-        if (xPos - (tooltipWidth / 2.0) < 0) {
-          let excessWidth = 0 - (xPos - (tooltipWidth / 2.0));
-          xPos = xPos + excessWidth;
-        }
-        if (yPos + (tooltipHeight / 2.0) > height) {
-          let excessWidth = yPos + (tooltipHeight / 2.0) - height;
-          yPos = yPos - excessWidth;
-        }
-        tooltip.attr("transform", `translate(${xPos},${yPos})`);
-
         let stateProperties = state.datum()['properties'];
         let stateName = stateProperties['name'];
-        // let stAbbr = stData['stateAbbrev'];
-        txt.text(stateName);
-        txt2.text(`Number of Total Disasters: ${stateDict[stateName]['numDisasters']}`);
-        txt3.text(`Total $ Allocated for Assistance: $${Math.round(stateDict[stateName]['amntAllocated'])}`);
+
+        // if zoomed on on state, don't show tooltip in normal area
+        if (!stateZoom) {
+          let bounds = path.bounds(state.datum());   // Get the pixel boundaries of the state
+          // center the tooltip beneath each state
+          let xPos = (bounds[0][0] + bounds[1][0]) / 2.0;
+          let yPos = bounds[1][1] - 15;
+          // prevent tooltip from going off edge of svg
+          if (xPos + (tooltipWidth / 2.0) > width) {
+            let excessWidth = (xPos + (tooltipWidth / 2.0)) - width;
+            xPos = xPos - excessWidth;
+          }
+          if (xPos - (tooltipWidth / 2.0) < 0) {
+            let excessWidth = 0 - (xPos - (tooltipWidth / 2.0));
+            xPos = xPos + excessWidth;
+          }
+          if (yPos + (tooltipHeight / 2.0) > height) {
+            let excessWidth = yPos + (tooltipHeight / 2.0) - height;
+            yPos = yPos - excessWidth;
+          }
+          // Make tooltip visible
+          tooltip.style("visibility", "visible");
+          tooltip.attr("transform", `translate(${xPos},${yPos})`);
+
+          txt.text(stateName);
+          txt2.text(`Number of Total Disasters: ${stateDict[stateName]['numDisasters']}`);
+          txt3.text(`Total $ Allocated for Assistance: $${Math.round(stateDict[stateName]['amntAllocated'])}`);
+        }
 
         var mo = topojson.mesh(us, us.objects.states, function (a, b) { return a['properties']['name'] === stateName || b['properties']['name'] === stateName; });
         momesh.datum(mo).attr("d", path);
@@ -352,29 +401,10 @@
       //y axis
       const yAxis = d3.axisLeft(fundingScale); //create yAxis
 
-      /*** Bar Chart Labels ***/
-
       barChart.append("g")
         .attr("class", "y axis")
         .attr("transform", `translate(${bCMargins.left}, ${bCMargins.bottom})`) //move axis to correct position
         .call(yAxis);
-
-          // Add x-axis label
-    barChartArea.append("text")
-      .attr("class", "x axis-label")
-      .attr("x", barChartWidth / 2)
-      .attr("y", barChartHeight + 50)
-      .attr("text-anchor", "middle")
-      .text("States");
-
-    // Add y-axis label
-    barChartArea.append("text")
-      .attr("class", "y axis-label")
-      .attr("transform", "rotate(-90)")
-      .attr("x", -barChartHeight / 2)
-      .attr("y", -100)
-      .attr("text-anchor", "middle")
-      .text("Funding ($)");
 
       let stateNumericalDict = {
         "AL": 1, "AK": 2, "AZ": 3, "AR": 4, "CA": 5, "CO": 6, "CT": 7,
@@ -395,6 +425,236 @@
           .style("stroke", "darkblue")
           .style("stroke-width", 10);
       });
+
+      /*** Zoom functionality ***/
+
+      let stateZoom = false; // true if map is zoomed in on state, false otherwise
+      let buttonWidth = 90;
+      let buttonHeight = 30;
+
+      let resetZoomBtn = svg.append("g")
+        .attr("class", "reset-zoom-btn")
+        .attr("visibility", "hidden")
+        .attr("transform", `translate(${0},${0})`)
+        .on("click", resetZoom);
+      resetZoomBtn.append("rect")
+        .attr("fill", "lightgray")
+        .attr("x", 0)
+        .attr("y", 0)
+        .attr("width", buttonWidth)
+        .attr("height", buttonHeight)
+      resetZoomBtn.append("text")
+        .attr("class", "zoom-txt")
+        .text("Reset Zoom")
+        .attr("fill", "black")
+        .attr("text-anchor", "middle")
+        .attr("alignment-baseline", "hanging")
+        .attr("x", buttonWidth / 2.0)
+        .attr("y", (buttonHeight / 2.0) + 5);
+      resetZoomBtn.attr("visibility", "hidden"); // hide btn by default
+
+      // must have .on() for zoom event for click zooming to work
+      let zoom = d3.zoom()
+        .scaleExtent([1, 10])
+        .on("zoom", mapZoomed)
+        .translateExtent([[-50, -50], [mapWidth + 100, mapHeight + 50]]);
+      // calling zoom just in case code needs to be executed before user plays with map
+      map.call(zoom);
+
+      map.selectAll("path.state").on("click", stateClicked);
+
+      function mapZoomed({ transform }) {
+        map.attr("transform", transform.toString());
+
+        // ensure consistent outline widths for states
+        // map.select(".outline")
+        //   .style("stroke-width", 2 / transform.k);
+
+        // show reset zoom button so user can reset zoom
+        // after making an adjustment
+        resetZoomBtn.attr("visibility", "visible");
+      }
+
+      function stateClicked(event, d) {
+        stateZoom = true;
+        // calculate bounds of state to zoom in on state center
+        let bounds = path.bounds(d.geometry);
+        let stateWidth = bounds[1][0] - bounds[0][0];
+        let stateHeight = bounds[1][1] - bounds[0][1];
+        let centerX = (bounds[0][0] + bounds[1][0]) / 2;
+        let centerY = (bounds[0][1] + bounds[1][1]) / 2;
+
+        // stateWidth / mapWidth or stateHeight / mapHeight
+        // is proportion of screen that state takes up in the default
+        // map (no zoom). If those values are lower, need
+        // to zoom in more. As a result, we pick the
+        // higher of the two in the scale calculation
+        let spaceFrac = Math.max(
+          stateWidth / mapWidth, stateHeight / mapHeight);
+        // want Zoom to be in between 1 and 10, so
+        // we take Math.min of 10 and
+        // scaleVal / (proportion of space state takes up)
+        // the lower the numerator of scaleVal, the less zoomed in the state is
+        let scale = Math.max(1, Math.min(10, 0.7 / spaceFrac));
+        // want to "translate" the point at the middle
+        // of the map to the middle of the entire screen
+        let translate = [
+          (mapWidth / 2) - (centerX * scale),
+          (mapHeight / 2) - (centerY * scale)];
+        // tell the zoom where to move the screen
+        let newTransform = d3.zoomIdentity
+          .translate(translate[0], translate[1])
+          .scale(scale);
+        // use this to call zoom and add animation
+        tooltip.style("visibility", "hidden");
+        map.transition()
+          .duration(1000)
+          .call(zoom.transform, newTransform);
+
+        // update bar chart with state info
+        updateStateDisasterBars(d['properties']['name']);
+      }
+
+      function resetZoom() {
+        // hide reset zoom button
+        resetZoomBtn.attr("visibility", "hidden");
+        // change bar chart back to all states stats
+        updateStateDisasterBars('All States');
+        map.transition()
+          .duration(1000)
+          .call(zoom.transform, d3.zoomIdentity)
+          // Source for .on("end"): https://d3js.org/d3-transition/control-flow
+          .on("end", function () {
+            // give on mouseover function back to states after transition done
+            stateZoom = false;
+            // hide zoom button after resetting zoom
+            resetZoomBtn.attr("visibility", "hidden");
+          });
+      }
+
+      /*** Disaster bar chart visualization ***/
+
+      // SVG and disaster bar chart (BC) constants
+      const dstrBCMargins = { top: 50, right: 20, bottom: 90, left: 40 };
+
+      const svgDstrBC = d3.select("svg#disaster-bar-chart-svg");
+      const svgDstrBCWidth = svgDstrBC.attr("width");
+      const svgDstrBCHeight = svgDstrBC.attr("height");
+
+      const dstrBCWidth = svgDstrBCWidth - dstrBCMargins.left - dstrBCMargins.right;
+      const dstrBCHeight = svgDstrBCHeight - dstrBCMargins.top - dstrBCMargins.bottom;
+      let dstrBCAnnotations = svgDstrBC.append("g").attr("class", "annotations");
+      let dstrbarChartArea = svgDstrBC.append("g")
+        .attr("transform", `translate(${dstrBCMargins.left}, ${dstrBCMargins.top})`);
+
+      // x axis initialization
+      let dstrBCBotAxis = d3.axisBottom();
+      let dstrBCBotAxisG = dstrBCAnnotations.append("g")
+        .attr("class", "x axis")
+        .attr("transform", `translate(${dstrBCMargins.left}, ${dstrBCHeight + dstrBCMargins.top})`);
+
+      // y axis initialization
+      let dstrBCLeftAxis = d3.axisLeft();
+      let dstrBCLeftAxisG = dstrBCAnnotations.append("g")
+        .attr("class", "y axis")
+        .attr("transform", `translate(${dstrBCMargins.left}, ${dstrBCMargins.top})`);
+
+      // chart title
+      let dstrBCtitle = svgDstrBC.append("text")
+        .attr("x", 10)
+        .attr("y", 20)
+        .style("font-size", "15px")
+
+      /**
+       * Updates bar chart based on the state `statekey`'s data.
+       * `stateKey` should be the name of a state
+       */
+      function updateStateDisasterBars(stateKey) {
+        const stateDstrData = stateDict[stateKey]['uniqueDisasters'];
+        const dstrNames = Object.keys(stateDstrData);
+        const dstrCounts = Object.values(stateDstrData);
+
+        dstrBCtitle.text(`Disasters in ${stateKey}`)
+
+        // x-axis scale
+        const dstrNameScale = d3.scaleBand()
+          .domain(dstrNames)
+          .range([0, dstrBCWidth])
+          .padding(0.2); // add space between bars
+
+        // y-axis scale
+        const dstrCountScale = d3.scaleLinear()
+          .domain([0, d3.max(dstrCounts)])
+          .range([dstrBCHeight, 0]);
+
+        // reset x axis and y axis to use the scales for the state
+        dstrBCBotAxis.scale(dstrNameScale);
+        dstrBCBotAxisG.transition().call(dstrBCBotAxis)
+          // source for rotation: https://stackoverflow.com/questions/20947488/d3-grouped-bar-chart-how-to-rotate-the-text-of-x-axis-ticks
+          .selectAll("text")
+          .style("text-anchor", "end")
+          .attr("dx", "-10")
+          .attr("dy", "0.25")
+          .attr("transform", "rotate(-65)");
+        dstrBCLeftAxis.scale(dstrCountScale);
+        dstrBCLeftAxisG.transition().call(dstrBCLeftAxis);
+
+        
+
+        // create bars with animation. for animation,
+        // opacity is set to low value to give illusion
+        // of disappearing, then bars enter.
+        // for removal, opacity is set to 0 then removed
+        // source: Professor Jeff Rzeszotarski 10.02 notes, 2024
+        dstrbarChartArea.selectAll('rect.bar')
+          .data(Object.entries(stateDstrData))
+          .join(enter => enter.append('rect')
+            .attr("class", "bar")
+            .attr("fill", "purple")
+            .attr("x", d => dstrNameScale(d[0]))
+            .attr("y", d => dstrCountScale(d[1]))
+            // rectangles start from top, so height goes from top as well
+            .attr("height", d => dstrCountScale(0) - dstrCountScale(d[1]))
+            .attr("width", dstrNameScale.bandwidth())
+            .attr("opacity", 0)
+            .call(enter => enter.transition()
+              .attr('opacity', 1)),
+            // update edited to animate movement of bars
+            // and resizing for categories that already exist
+            update => update.call(update => update.transition()
+              .attr("fill", "purple")
+              .attr("x", d => dstrNameScale(d[0]))
+              .attr("y", d => dstrCountScale(d[1]))
+              .attr("height", d => dstrCountScale(0) - dstrCountScale(d[1]))
+              .attr("width", dstrNameScale.bandwidth())),
+            exit => exit.call(exit =>
+              exit.transition().attr('opacity', 0).remove()));
+
+        // add text for counts of each disaster
+        dstrbarChartArea.selectAll('text.dstr-count-txt')
+          .data(Object.entries(stateDstrData))
+          .join(enter => enter.append('text')
+            .attr("class", "dstr-count-txt")
+            .attr("text-anchor", "middle")
+            .attr("font-size", "15px")
+            .attr("x", d => dstrNameScale(d[0]) + (dstrNameScale.bandwidth() / 2.0))
+            .attr("y", d => dstrCountScale(d[1]) - 10)
+            .text(d => d[1])
+            .call(enter => enter.transition()
+              .attr('opacity', 1)),
+            update => update.call(update => update.transition()
+              .attr("text-anchor", "middle")
+              .attr("font-size", "15px")
+              .attr("x", d => dstrNameScale(d[0]) + (dstrNameScale.bandwidth() / 2.0))
+              .attr("y", d => dstrCountScale(d[1]) - 10)
+              .text(d => d[1])),
+            exit => exit.call(exit =>
+              exit.transition().attr('opacity', 0).remove()));
+      }
+
+      updateStateDisasterBars('All States');
+
+      /*** Legend ***/
 
       drawLegend("#legend-svg", stateColorScale);
     }
