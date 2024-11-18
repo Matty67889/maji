@@ -48,6 +48,12 @@
       color: white;
       padding: 20px;
     }
+
+    #bar-chart {
+      display: flex;
+      justify-self: center;
+      /* border: 1px solid black; */
+    }
   </style>
 </head>
 
@@ -74,7 +80,7 @@
     </div>
   </div>
   <h3 class="map-title">States by FEMA Allocated Assistance</h3>
-  <svg id="bar-chart" height="600" width="1100"></svg>
+  <svg id="bar-chart" height="600" width="1300"></svg>
 
   <!-- Scripts -->
   <script>
@@ -358,7 +364,7 @@
       const svgWidth = barChart.attr("width");
       const svgHeight = barChart.attr("height");
 
-      const bCMargins = { top: 20, right: 100, bottom: 150, left: 150 };
+      const bCMargins = { top: 20, right: 20, bottom: 80, left: 90 };
       // create bar chart's area & set its dimensions
       const barChartWidth = svgWidth - bCMargins.left - bCMargins.right;
       const barChartHeight = svgHeight - bCMargins.top - bCMargins.bottom;
@@ -385,7 +391,7 @@
       // x-axis scale for bar chart
       const stateScale = d3.scalePoint() //source: https://d3js.org/d3-scale/point
         .domain(stateAbbrevs)
-        .range([bCMargins.top, barChartWidth - bCMargins.left]);
+        .range([bCMargins.top, barChartWidth]);
 
       // create domain for y-axis scale
       // let funding = []
@@ -421,20 +427,20 @@
         // Add x-axis label (States)
      barChart.append("text")
        .attr("class", "x axis-label")
-       .attr("x", (bCMargins.left + barChartWidth) / 2) // Center the label horizontally based on the width of the chart
+       .attr("x", (bCMargins.left + bCMargins.right + barChartWidth) / 2) // Center the label horizontally based on the width of the chart
        .attr("y", barChartHeight + 80) // Position below the x-axis (adjust as needed)
        .attr("text-anchor", "middle") // Align the text in the center
        .text("States");
 
 
-   // Add y-axis label
-   barChartArea.append("text")
-     .attr("class", "y axis-label")
-     .attr("transform", "rotate(-90)")
-     .attr("x", -barChartHeight / 2)
-     .attr("y", -100)
-     .attr("text-anchor", "middle")
-     .text("Funding ($)");
+      // Add y-axis label
+      barChartArea.append("text")
+        .attr("class", "y axis-label")
+        .attr("transform", "rotate(-90)")
+        .attr("x", -barChartHeight / 2)
+        .attr("y", - (bCMargins.left - bCMargins.right))
+        .attr("text-anchor", "middle")
+        .text("Funding ($)");
 
 
 
