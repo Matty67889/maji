@@ -12,7 +12,6 @@
   <script src="https://d3js.org/topojson.v3.min.js"></script>
 
   <style>
-
     .outline {
       fill: none;
       stroke: black;
@@ -43,18 +42,21 @@
       flex-direction: row;
       align-items: center;
     }
+
     body {
       background-color: #f1d4ce;
     }
+
     .map-title {
       text-align: center;
       background-color: darkred;
       color: white;
       padding: 20px;
     }
+
     .text-blurb {
       max-width: 50%;
-}
+    }
 
     #bar-chart {
       display: flex;
@@ -68,27 +70,28 @@
   <!-- HTML Structure -->
   <h1>Project 2</h1>
   <h2 class="map-title">United States by Disaster Severity</h2>
-  <p class="text-blurb">Given the looming threat of global climate change, we were interested 
+  <p class="text-blurb">Given the looming threat of global climate change, we were interested
     in looking at the distribution of climate disasters within the United States
     as a whole. The map visualization on the left shows the United States colored by disaster severity which we have
-    calculated to be the total disaster amount for a given state. The bar chart on the right Federal Emergency Management Agency
-  (FEMA) provides disaster relief that is proportional to the severity of disasters</p>
+    calculated to be the total disaster amount for a given state. The bar chart on the right Federal Emergency
+    Management Agency
+    (FEMA) provides disaster relief that is proportional to the severity of disasters</p>
   <div class="flex-row">
-    
+
     <div class="flex-col">
-      
+
       <div>
         <h3>Number of Disasters Scale</h3>
         <svg id="legend-svg" height="50" width="400"></svg>
       </div>
       <div>
-        
+
         <svg id="disaster-svg" height="600" width="800" style="background: #f1d4ce; margin-top:50px;"></svg>
       </div>
-      
+
     </div>
     <div>
-      <svg id="disaster-bar-chart-svg" height="600" width="610" ></svg>
+      <svg id="disaster-bar-chart-svg" height="600" width="610"></svg>
     </div>
   </div>
   <h2 class="map-title">States by FEMA Allocated Assistance</h2>
@@ -350,7 +353,7 @@
           }
           // Make tooltip visible
           const usCurr = d3.format("$,");
-          const thousands= d3.format(",");
+          const thousands = d3.format(",");
           tooltip.style("visibility", "visible");
           tooltip.attr("transform", `translate(${xPos},${yPos})`);
 
@@ -386,7 +389,7 @@
       const barChartArea = barChart.append("g")
         .attr("transform", `translate(${bCMargins.left}, ${bCMargins.top})`);
       let annotations = barChart.append("g").attr("class", "annotations");
-        
+
       // // x-axis scale for bar chart
       // const stateScale = d3.scaleLinear()
       //           .domain([0,50])
@@ -425,8 +428,8 @@
       //x axis
       let xAxis = d3.axisBottom(stateScale); //create xAxis
       let xAxisG = annotations.append("g")
-                        .attr("class", "x axis")
-                        .attr("transform",`translate(${bCMargins.left},${barChartHeight+bCMargins.top+10})`);
+        .attr("class", "x axis")
+        .attr("transform", `translate(${bCMargins.left},${barChartHeight + bCMargins.top + 10})`);
       barChart.append("g")
         .attr("class", "x axis")
         .attr("transform", `translate(${bCMargins.left}, ${bCMargins.top + barChartHeight})`) //move axis to correct position
@@ -442,13 +445,13 @@
         .attr("transform", `translate(${bCMargins.left}, ${bCMargins.top})`) //move axis to correct position
         .call(yAxis);
 
-        // Add x-axis label (States)
-     barChart.append("text")
-       .attr("class", "x axis-label")
-       .attr("x", (bCMargins.left + bCMargins.right + barChartWidth) / 2) // Center the label horizontally based on the width of the chart
-       .attr("y", barChartHeight + 80) // Position below the x-axis (adjust as needed)
-       .attr("text-anchor", "middle") // Align the text in the center
-       .text("States");
+      // Add x-axis label (States)
+      barChart.append("text")
+        .attr("class", "x axis-label")
+        .attr("x", (bCMargins.left + bCMargins.right + barChartWidth) / 2) // Center the label horizontally based on the width of the chart
+        .attr("y", barChartHeight + 80) // Position below the x-axis (adjust as needed)
+        .attr("text-anchor", "middle") // Align the text in the center
+        .text("States");
 
 
       // Add y-axis label
@@ -473,55 +476,56 @@
       };
 
       //bars
-      function ogBars(){
-      stateObjs.forEach((d, i) => {
-        barChartArea.append('line')
-          .attr("x1", stateScale(d['stateAbbrev']))
-          .attr("x2", stateScale(d['stateAbbrev']))
-          .attr("y1", barChartHeight)
-          .attr("y2", fundingScale(d['amntAllocated']))
-          .style("stroke", "darkred")
-          .style("stroke-width", 10);
-      })};
+      function ogBars() {
+        stateObjs.forEach((d, i) => {
+          barChartArea.append('line')
+            .attr("x1", stateScale(d['stateAbbrev']))
+            .attr("x2", stateScale(d['stateAbbrev']))
+            .attr("y1", barChartHeight)
+            .attr("y2", fundingScale(d['amntAllocated']))
+            .style("stroke", "darkred")
+            .style("stroke-width", 10);
+        })
+      };
       ogBars();
-      function updateBars(){
+      function updateBars() {
         const sortedMoney = stateObjs.sort((a, b) => b.amntAllocated - a.amntAllocated);
-        
+
         xAxis.scale(stateScale)
         xAxisG.transition().call(xAxis);
         // const sortedStates = d3.map(sortedMoney, d => d.stateAbbrev);
-          barChartArea.selectAll('line').data(sortedMoney)
-            .join(enter => enter.append('line')
+        barChartArea.selectAll('line').data(sortedMoney)
+          .join(enter => enter.append('line')
             .attr("x1", stateScale(sortedMoney['stateAbbrev']))
-          .attr("x2", stateScale(sortedMoney['stateAbbrev']))
-          .attr("y1", barChartHeight)
-          .attr("y2", fundingScale(sortedMoney['amntAllocated']))
-          .style("stroke", "darkred")
-          .style("stroke-width", 10)
-          .call( enter => enter.transition() ),
-                update => update.call( update => update.transition()  // Animate resizing and movement
-                    .attr("x1", d => stateScale(d.stateAbbrev))
-                    .attr('x2', d => stateScale(d.stateAbbrev))
-                    .attr('y1', barChartHeight)
-                    .attr("y1", d => fundingScale(d.amntAllocated)),
-                    exit => exit.call( exit => exit.transition().attr('opacity',0).remove() ))) 
-          
-      
-     
-      }; 
+            .attr("x2", stateScale(sortedMoney['stateAbbrev']))
+            .attr("y1", barChartHeight)
+            .attr("y2", fundingScale(sortedMoney['amntAllocated']))
+            .style("stroke", "darkred")
+            .style("stroke-width", 10)
+            .call(enter => enter.transition()),
+            update => update.call(update => update.transition()  // Animate resizing and movement
+              .attr("x1", d => stateScale(d.stateAbbrev))
+              .attr('x2', d => stateScale(d.stateAbbrev))
+              .attr('y1', barChartHeight)
+              .attr("y1", d => fundingScale(d.amntAllocated)),
+              exit => exit.call(exit => exit.transition().attr('opacity', 0).remove())))
+
+
+
+      };
       const updateButton = d3.select("div#update-button")
-          .append("button")
-          .text('Greatest to Least')
-          .on("click", function() {
-            updateBars();
-          });
+        .append("button")
+        .text('Greatest to Least')
+        .on("click", function () {
+          updateBars();
+        });
 
       const resetButton = d3.select('div#reset-button')
-      .append('button')
-      .text("Reset")
-      .on('click', function(){
-        ogBars();
-      });
+        .append('button')
+        .text("Reset")
+        .on('click', function () {
+          ogBars();
+        });
       /*** Zoom functionality ***/
 
       let stateZoom = false; // true if map is zoomed in on state, false otherwise
@@ -546,7 +550,7 @@
         .attr("text-anchor", "middle")
         .attr("alignment-baseline", "hanging")
         .attr("x", buttonWidth / 2.0)
-        .attr("y", (buttonHeight / 2.0 - 5));
+        .attr("y", (buttonHeight / 2.0) + 5);
       resetZoomBtn.attr("visibility", "hidden"); // hide btn by default
 
       // must have .on() for zoom event for click zooming to work
@@ -659,7 +663,7 @@
       let dstrBCtitle = svgDstrBC.append("text")
         .attr("x", 10)
         .attr("y", 20)
-        .style("font-size", "15px")
+        .style("font-size", "20px")
 
       /**
        * Updates bar chart based on the state `statekey`'s data.
@@ -667,8 +671,10 @@
        */
       function updateStateDisasterBars(stateKey) {
         const stateDstrData = stateDict[stateKey]['uniqueDisasters'];
-        const dstrNames = Object.keys(stateDstrData);
-        const dstrCounts = Object.values(stateDstrData);
+        const sortedStateDstrData = Object.entries(stateDstrData).sort((a, b) => b[1] - a[1]);
+        // console.log(sortedStateDstrData);
+        const dstrNames = d3.map(sortedStateDstrData, d => d[0]);
+        const dstrCounts = d3.map(sortedStateDstrData, d => d[1]);
 
         dstrBCtitle.text(`Disasters in ${stateKey}`)
 
@@ -695,7 +701,7 @@
         dstrBCLeftAxis.scale(dstrCountScale);
         dstrBCLeftAxisG.transition().call(dstrBCLeftAxis);
 
-        
+
 
         // create bars with animation. for animation,
         // opacity is set to low value to give illusion
@@ -703,7 +709,7 @@
         // for removal, opacity is set to 0 then removed
         // source: Professor Jeff Rzeszotarski 10.02 notes, 2024
         dstrbarChartArea.selectAll('rect.bar')
-          .data(Object.entries(stateDstrData))
+          .data(sortedStateDstrData)
           .join(enter => enter.append('rect')
             .attr("class", "bar")
             .attr("fill", "darkorange")
@@ -728,19 +734,20 @@
 
         // add text for counts of each disaster
         dstrbarChartArea.selectAll('text.dstr-count-txt')
-          .data(Object.entries(stateDstrData))
+          .data(sortedStateDstrData)
           .join(enter => enter.append('text')
             .attr("class", "dstr-count-txt")
             .attr("text-anchor", "middle")
-            .attr("font-size", "15px")
+            .attr("font-size", "10.5px")
             .attr("x", d => dstrNameScale(d[0]) + (dstrNameScale.bandwidth() / 2.0))
             .attr("y", d => dstrCountScale(d[1]) - 10)
             .text(d => d[1])
+            .attr('stroke', 'darkred')
             .call(enter => enter.transition()
               .attr('opacity', 1)),
             update => update.call(update => update.transition()
               .attr("text-anchor", "middle")
-              .attr("font-size", "15px")
+              .attr("font-size", "10.5px")
               .attr("x", d => dstrNameScale(d[0]) + (dstrNameScale.bandwidth() / 2.0))
               .attr("y", d => dstrCountScale(d[1]) - 10)
               .text(d => d[1]))
