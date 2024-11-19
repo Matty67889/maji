@@ -55,13 +55,13 @@
     }
 
     .text-blurb {
-      max-width: 50%;
+      font-size: larger;
+      font-weight: lighter;
     }
 
     #bar-chart {
       display: flex;
       justify-self: center;
-      /* border: 1px solid black; */
     }
 
     #bCButtons{
@@ -77,25 +77,44 @@
       color: white;
       border-radius: 5px;
     }
+    .text-container {
+      width: 50%;
+      padding: 20px;
+      background-color: antiquewhite;
+      color: darkred;
+      font-weight: bolder;
+      border-radius: 5px;
+    }
+    .direction{
+      text-align: center;
+      color: darkred;
+      -webkit-text-stroke: 0.3px white;
+    }
+    .title {
+      font-weight: bolder;
+    }
   </style>
 </head>
 
 <body>
   <!-- HTML Structure -->
-  <h1>Project 2</h1>
+  <p>Project 2: Matthew Mentis-Cort (mam692), Jesse Phillips (jcp345), Imani Thompson (it78), Ayslin Walker (abw96)</p>
   <h2 class="map-title">United States by Disaster Severity</h2>
+  <div class="text-container">
   <p class="text-blurb">Given the looming threat of global climate change, we were interested
     in looking at the distribution of climate disasters within the United States
-    as a whole. The map visualization on the left shows the United States colored by disaster severity which we have
-    calculated to be the total disaster amount for a given state. The bar chart on the right Federal Emergency
-    Management Agency
-    (FEMA) provides disaster relief that is proportional to the severity of disasters</p>
+    as a whole.</p> 
+    <p class="text-blurb">The map visualization on the left shows the United States colored by disaster severity which we have
+    calculated to be the total disaster amount for a given state. The bar chart on the right displays further info
+    about the types of disasters that make up disaster severity throughout the country.</p>
+  </div>
   <div class="flex-row">
 
     <div class="flex-col">
+    <h3 class="direction">Click on a state for more information</h3>
 
       <div>
-        <h3>Number of Disasters Scale</h3>
+        <p class="title">Number of Disasters Scale</p>
         <svg id="legend-svg" height="50" width="400"></svg>
       </div>
       <div>
@@ -109,6 +128,12 @@
     </div>
   </div>
   <h2 class="map-title">States by FEMA Allocated Assistance</h2>
+  <div class="text-container">
+  <p class="text-blurb">The bar chart below displays the total amount of money that the Federal Emergency Management Agency (FEMA)
+    has allocated to each of the 50 states. Clicking the sorting button will shows the states in order from most funding to least, 
+    allowing for the observance of any disparities between states with more disasters than others and inadequate aid being provided.
+  </p>
+</div>
   <div id = "bCButtons">
     <button id = "update-button">Sort by Greatest to Least Funding</button>
     <button id = "reset-button">Reset</button>
@@ -587,7 +612,7 @@
         .attr("text-anchor", "middle")
         .attr("alignment-baseline", "hanging")
         .attr("x", buttonWidth / 2.0)
-        .attr("y", (buttonHeight / 2.0) + 5);
+        .attr("y", (buttonHeight / 2.0) - 5);
       resetZoomBtn.attr("visibility", "hidden"); // hide btn by default
 
       // must have .on() for zoom event for click zooming to work
