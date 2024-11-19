@@ -371,94 +371,116 @@
       });
 
       /*** Bar chart visualization ***/
-
       // create svg & set its dimensions
       const barChart = d3.select("svg#bar-chart");
+
 
       const svgWidth = barChart.attr("width");
       const svgHeight = barChart.attr("height");
 
-      const bCMargins = { top: 20, right: 20, bottom: 80, left: 90 };
+
+      const bCMargins = { top: 20, right: 20, bottom: 80, left: 60 };
       // create bar chart's area & set its dimensions
       const barChartWidth = svgWidth - bCMargins.left - bCMargins.right;
       const barChartHeight = svgHeight - bCMargins.top - bCMargins.bottom;
 
+
+      const bCAnnotations = barChart.append("g").attr("class", "annotations");
       const barChartArea = barChart.append("g")
-        .attr("transform", `translate(${bCMargins.left}, ${bCMargins.top})`);
-      let annotations = barChart.append("g").attr("class", "annotations");
-        
+        .attr("transform", `translate(${bCMargins.left + 10}, ${bCMargins.top})`);
+
+
       // // x-axis scale for bar chart
       // const stateScale = d3.scaleLinear()
       //           .domain([0,50])
       //           .range([barChartWidth-margins.left, margins.top]);
 
+
       //create array for x-axis scale, which is categorical (states instead of numbers)
       // let stateAbbrevs = []
+
+
 
 
       // stateObjs.forEach(d => {
       //   states.push(d['stateAbbrev'])
       // });
 
+
       // console.log(states)
+
 
       // x-axis scale for bar chart
       const stateScale = d3.scalePoint() //source: https://d3js.org/d3-scale/point
         .domain(stateAbbrevs)
-        .range([bCMargins.top, barChartWidth]);
+        .range([0, barChartWidth]);
+
 
       // create domain for y-axis scale
       // let funding = []
+
 
       // stateObjs.forEach(d => {
       //   funding.push(d['amntAllocated'])
       // });
 
+
       //two-item array containing min and max values of funding
       const fundingExtent = d3.extent(stateObjs, d => d['amntAllocated']);
+
 
       // y-axis scale for bar chart
       const fundingScale = d3.scaleLog()
         .domain(fundingExtent)
-        .range([barChartHeight, 10]);
+        .range([barChartHeight, 0]);
+
 
       //x axis
-      let xAxis = d3.axisBottom(stateScale); //create xAxis
-      let xAxisG = annotations.append("g")
-                        .attr("class", "x axis")
-                        .attr("transform",`translate(${bCMargins.left},${barChartHeight+bCMargins.top+10})`);
-      barChart.append("g")
+      let xAxis = d3.axisBottom(); //create xAxis
+      let xAxisG = bCAnnotations.append("g")
         .attr("class", "x axis")
-        .attr("transform", `translate(${bCMargins.left}, ${bCMargins.top + barChartHeight})`) //move axis to correct position
-        .call(xAxis);
+        .attr("transform", `translate(${bCMargins.left + 10},${barChartHeight + bCMargins.top + 10})`);
+      // barChart.append("g")
+      //   .attr("class", "x axis")
+      //   .attr("transform", `translate(${bCMargins.left}, ${bCMargins.top + barChartHeight})`) //move axis to correct position
+      //   .call(xAxis);
+
 
       //y axis
       let yAxis = d3.axisLeft(fundingScale); //create yAxis
-      let yAxisG = annotations.append("g")
+      let yAxisG = bCAnnotations.append("g")
         .attr("class", "y axis")
-        .attr("transform", `translate(${bCMargins.left}, ${bCMargins.top})`);
-      barChart.append("g")
-        .attr("class", "y axis")
-        .attr("transform", `translate(${bCMargins.left}, ${bCMargins.top})`) //move axis to correct position
+        .attr("transform", `translate(${bCMargins.left}, ${bCMargins.top})`)
         .call(yAxis);
+      // barChart.append("g")
+      //   .attr("class", "y axis")
+      //   .attr("transform", `translate(${bCMargins.left}, ${bCMargins.top})`) //move axis to correct position
+      //   .call(yAxis);
 
-        // Add x-axis label (States)
-     barChart.append("text")
-       .attr("class", "x axis-label")
-       .attr("x", (bCMargins.left + bCMargins.right + barChartWidth) / 2) // Center the label horizontally based on the width of the chart
-       .attr("y", barChartHeight + 80) // Position below the x-axis (adjust as needed)
-       .attr("text-anchor", "middle") // Align the text in the center
-       .text("States");
+
+      // Add x-axis label (States)
+      barChart.append("text")
+        .attr("class", "x axis-label")
+        .attr("x", (bCMargins.left + bCMargins.right + barChartWidth) / 2) // Center the label horizontally based on the width of the chart
+        .attr("y", barChartHeight + 80) // Position below the x-axis (adjust as needed)
+        .attr("text-anchor", "middle") // Align the text in the center
+        .text("States");
+
+
 
 
       // Add y-axis label
-      barChartArea.append("text")
+      barChart.append("text")
         .attr("class", "y axis-label")
         .attr("transform", "rotate(-90)")
         .attr("x", -barChartHeight / 2)
-        .attr("y", - (bCMargins.left - bCMargins.right))
+        .attr("y", bCMargins.left - 40)
         .attr("text-anchor", "middle")
         .text("Funding ($)");
+
+
+
+
 
 
 
@@ -472,56 +494,74 @@
         "UT": 44, "VT": 45, "VA": 46, "WA": 47, "WV": 48, "WI": 49, "WY": 50
       };
 
+
       //bars
-      function ogBars(){
-      stateObjs.forEach((d, i) => {
-        barChartArea.append('line')
-          .attr("x1", stateScale(d['stateAbbrev']))
-          .attr("x2", stateScale(d['stateAbbrev']))
-          .attr("y1", barChartHeight)
-          .attr("y2", fundingScale(d['amntAllocated']))
-          .style("stroke", "darkred")
-          .style("stroke-width", 10);
-      })};
+      function ogBars() {
+        // console.log("stateScale\n", stateScale);
+        xAxis.scale(stateScale);
+        xAxisG.transition().call(xAxis);
+
+
+        barChartArea.selectAll('line').data(stateObjs)
+          .join(enter => enter.append('line')
+            .attr("x1", d => stateScale(d['stateAbbrev']))
+            .attr("x2", d => stateScale(d['stateAbbrev']))
+            .attr("y1", barChartHeight)
+            .attr("y2", d => fundingScale(d['amntAllocated']))
+            .style("stroke", "darkred")
+            .style("stroke-width", 10)
+            .call(enter => enter.transition()),
+            update => update.call(update => update.transition()  // Animate resizing and movement
+              .attr("x1", d => stateScale(d.stateAbbrev))
+              .attr("x2", d => stateScale(d.stateAbbrev))
+              .attr("y1", barChartHeight)
+              .attr("y2", d => fundingScale(d.amntAllocated)),
+              exit => exit.call(exit => exit.transition().attr('opacity', 0).remove())));
+      };
       ogBars();
-      function updateBars(){
+      function updateBars() {
         const sortedMoney = stateObjs.sort((a, b) => b.amntAllocated - a.amntAllocated);
-        
-        xAxis.scale(stateScale)
+
+
+        const sortedStateScale = d3.scalePoint()
+          .domain(d3.map(sortedMoney, d => d['stateAbbrev']))
+          .range([0, barChartWidth]);
+
+
+        xAxis.scale(sortedStateScale);
         xAxisG.transition().call(xAxis);
         // const sortedStates = d3.map(sortedMoney, d => d.stateAbbrev);
-          barChartArea.selectAll('line').data(sortedMoney)
-            .join(enter => enter.append('line')
-            .attr("x1", stateScale(sortedMoney['stateAbbrev']))
-          .attr("x2", stateScale(sortedMoney['stateAbbrev']))
-          .attr("y1", barChartHeight)
-          .attr("y2", fundingScale(sortedMoney['amntAllocated']))
-          .style("stroke", "darkred")
-          .style("stroke-width", 10)
-          .call( enter => enter.transition() ),
-                update => update.call( update => update.transition()  // Animate resizing and movement
-                    .attr("x1", d => stateScale(d.stateAbbrev))
-                    .attr('x2', d => stateScale(d.stateAbbrev))
-                    .attr('y1', barChartHeight)
-                    .attr("y1", d => fundingScale(d.amntAllocated)),
-                    exit => exit.call( exit => exit.transition().attr('opacity',0).remove() ))) 
-          
-      
-     
-      }; 
+        barChartArea.selectAll('line').data(sortedMoney)
+          .join(enter => enter.append('line')
+            .attr("x1", d => sortedStateScale(d['stateAbbrev']))
+            .attr("x2", d => sortedStateScale(d['stateAbbrev']))
+            .attr("y1", barChartHeight)
+            .attr("y2", d => fundingScale(d['amntAllocated']))
+            .style("stroke", "darkred")
+            .style("stroke-width", 10)
+            .call(enter => enter.transition()),
+            update => update.call(update => update.transition()  // Animate resizing and movement
+              .attr("x1", d => sortedStateScale(d.stateAbbrev))
+              .attr("x2", d => sortedStateScale(d.stateAbbrev))
+              .attr("y1", barChartHeight)
+              .attr("y2", d => fundingScale(d.amntAllocated)),
+              exit => exit.call(exit => exit.transition().attr('opacity', 0).remove())));
+      };
       const updateButton = d3.select("div#update-button")
-          .append("button")
-          .text('Greatest to Least')
-          .on("click", function() {
-            updateBars();
-          });
+        .append("button")
+        .text('Greatest to Least')
+        .on("click", function () {
+          updateBars();
+        });
+
 
       const resetButton = d3.select('div#reset-button')
-      .append('button')
-      .text("Reset")
-      .on('click', function(){
-        ogBars();
-      });
+        .append('button')
+        .text("Reset")
+        .on('click', function () {
+          ogBars();
+        });
+
       /*** Zoom functionality ***/
 
       let stateZoom = false; // true if map is zoomed in on state, false otherwise
