@@ -63,6 +63,20 @@
       justify-self: center;
       /* border: 1px solid black; */
     }
+
+    #bCButtons{
+      display: flex;
+      justify-content: center;
+    }
+
+    #update-button, #reset-button {
+      cursor:pointer;
+      padding: 10px;
+      margin: 5px;
+      background-color: black;
+      color: white;
+      border-radius: 5px;
+    }
   </style>
 </head>
 
@@ -95,9 +109,13 @@
     </div>
   </div>
   <h2 class="map-title">States by FEMA Allocated Assistance</h2>
+  <div id = "bCButtons">
+    <button id = "update-button">Sort by Greatest to Least Funding</button>
+    <button id = "reset-button">Reset</button>
+  </div>
   <svg id="bar-chart" height="600" width="1100"></svg>
-  <div id="update-button"></div>
-  <div id="reset-button"></div>
+
+
 
   <!-- Scripts -->
   <script>
@@ -550,17 +568,13 @@
               .attr("y2", d => fundingScale(d.amntAllocated)),
               exit => exit.call(exit => exit.transition().attr('opacity', 0).remove())));
       };
-      const updateButton = d3.select("div#update-button")
-        .append("button")
-        .text('Greatest to Least')
+      const updateButton = d3.select("button#update-button")
         .on("click", function () {
           updateBars();
         });
 
 
-      const resetButton = d3.select('div#reset-button')
-        .append('button')
-        .text("Reset")
+      const resetButton = d3.select('button#reset-button')
         .on('click', function () {
           ogBars();
         });
