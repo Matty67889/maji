@@ -130,7 +130,7 @@
   <h2 class="map-title">States by FEMA Allocated Assistance</h2>
   <div class="text-container">
   <p class="text-blurb">The bar chart below displays the total amount of money that the Federal Emergency Management Agency (FEMA)
-    has allocated to each of the 50 states. Clicking the sorting button will shows the states in order from most funding to least, 
+    has allocated to each of the 50 states. Clicking the sorting button will show the states in order from most funding to least, 
     allowing for the observance of any disparities between states with more disasters than others and inadequate aid being provided.
   </p>
 </div>
@@ -436,39 +436,10 @@
         .attr("transform", `translate(${bCMargins.left + 10}, ${bCMargins.top})`);
 
 
-      // // x-axis scale for bar chart
-      // const stateScale = d3.scaleLinear()
-      //           .domain([0,50])
-      //           .range([barChartWidth-margins.left, margins.top]);
-
-
-      //create array for x-axis scale, which is categorical (states instead of numbers)
-      // let stateAbbrevs = []
-
-
-
-
-      // stateObjs.forEach(d => {
-      //   states.push(d['stateAbbrev'])
-      // });
-
-
-      // console.log(states)
-
-
       // x-axis scale for bar chart
       const stateScale = d3.scalePoint() //source: https://d3js.org/d3-scale/point
         .domain(stateAbbrevs)
         .range([0, barChartWidth]);
-
-
-      // create domain for y-axis scale
-      // let funding = []
-
-
-      // stateObjs.forEach(d => {
-      //   funding.push(d['amntAllocated'])
-      // });
 
 
       //two-item array containing min and max values of funding
@@ -486,10 +457,6 @@
       let xAxisG = bCAnnotations.append("g")
         .attr("class", "x axis")
         .attr("transform", `translate(${bCMargins.left + 10},${barChartHeight + bCMargins.top + 10})`);
-      // barChart.append("g")
-      //   .attr("class", "x axis")
-      //   .attr("transform", `translate(${bCMargins.left}, ${bCMargins.top + barChartHeight})`) //move axis to correct position
-      //   .call(xAxis);
 
 
       //y axis
@@ -498,10 +465,6 @@
         .attr("class", "y axis")
         .attr("transform", `translate(${bCMargins.left}, ${bCMargins.top})`)
         .call(yAxis);
-      // barChart.append("g")
-      //   .attr("class", "y axis")
-      //   .attr("transform", `translate(${bCMargins.left}, ${bCMargins.top})`) //move axis to correct position
-      //   .call(yAxis);
 
 
       // Add x-axis label (States)
@@ -511,9 +474,6 @@
         .attr("y", barChartHeight + 80) // Position below the x-axis (adjust as needed)
         .attr("text-anchor", "middle") // Align the text in the center
         .text("States");
-
-
-
 
       // Add y-axis label
       barChart.append("text")
@@ -531,9 +491,10 @@
         xAxis.scale(stateScale);
         xAxisG.transition().call(xAxis);
 
-
+        // source: Professor Jeff Rzeszotarski 10.02 notes, 2024
         barChartArea.selectAll('line').data(stateObjs)
           .join(enter => enter.append('line')
+            // source: Professor Jeff Rzeszotarski 09.11 notes, 2024
             .attr("x1", d => stateScale(d['stateAbbrev']))
             .attr("x2", d => stateScale(d['stateAbbrev']))
             .attr("y1", barChartHeight)
