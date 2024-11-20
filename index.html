@@ -538,14 +538,16 @@
             .attr("x2", d => stateScale(d['stateAbbrev']))
             .attr("y1", barChartHeight)
             .attr("y2", d => fundingScale(d['amntAllocated']))
-            .style("stroke", "darkred")
+            .style("stroke", d => stateColorScale(d['numDisasters']))
             .style("stroke-width", 10)
             .call(enter => enter.transition()),
             update => update.call(update => update.transition()  // Animate resizing and movement
               .attr("x1", d => stateScale(d.stateAbbrev))
               .attr("x2", d => stateScale(d.stateAbbrev))
               .attr("y1", barChartHeight)
-              .attr("y2", d => fundingScale(d.amntAllocated)),
+              .attr("y2", d => fundingScale(d.amntAllocated))
+              .style("stroke", d => stateColorScale(d.numDisasters))
+              .style("stroke-width", 10),
               exit => exit.call(exit => exit.transition().attr('opacity', 0).remove())));
       };
       ogBars();
@@ -567,14 +569,16 @@
             .attr("x2", d => sortedStateScale(d['stateAbbrev']))
             .attr("y1", barChartHeight)
             .attr("y2", d => fundingScale(d['amntAllocated']))
-            .style("stroke", "darkred")
+            .style("stroke", d => stateColorScale(d['numDisasters']))
             .style("stroke-width", 10)
             .call(enter => enter.transition()),
             update => update.call(update => update.transition()  // Animate resizing and movement
               .attr("x1", d => sortedStateScale(d.stateAbbrev))
               .attr("x2", d => sortedStateScale(d.stateAbbrev))
               .attr("y1", barChartHeight)
-              .attr("y2", d => fundingScale(d.amntAllocated)),
+              .attr("y2", d => fundingScale(d.amntAllocated))
+              .style("stroke", d => stateColorScale(d.numDisasters))
+              .style("stroke-width", 10),
               exit => exit.call(exit => exit.transition().attr('opacity', 0).remove())));
       };
       const updateButton = d3.select("button#update-button")
